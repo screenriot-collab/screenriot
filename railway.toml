@@ -1,0 +1,10 @@
+# Railway config for API service (monorepo root).
+# When Root Directory is empty (repo root), start must point to built output path.
+
+[build]
+# Override in dashboard if needed, e.g.:
+# pnpm install --frozen-lockfile && pnpm --filter @screenriot/api run db:generate && pnpm --filter @screenriot/api run build
+
+[deploy]
+# Required when Root Directory is repo root: dist is at apps/api/dist/main.js
+startCommand = "node apps/api/dist/main.js"
