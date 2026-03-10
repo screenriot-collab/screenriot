@@ -25,7 +25,7 @@ export function useContributions() {
     } finally {
       setLoading(false);
     }
-  }, [page, status]);
+  }, [page, status, search]);
 
   useEffect(() => {
     loadData();
