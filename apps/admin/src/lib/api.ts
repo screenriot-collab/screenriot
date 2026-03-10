@@ -8,7 +8,7 @@ import type {
 import type { SiteUsersListResponse, SiteUserDetail, VerificationDocument } from '@/types/site-users';
 import type { DashboardStats } from '@/types/dashboard';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
 
 function getToken(): string | null {
   return localStorage.getItem('admin_token');
