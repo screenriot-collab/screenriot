@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment (secrets)
+.env
+.env.local
+.env.*.local
+
+# Cursor / local-only config
+.cursor/
+
+# Build / cache
+dist/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# IDE / OS
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# Local docs (not for GitHub)
+docs/

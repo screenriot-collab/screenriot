@@ -1,0 +1,12 @@
+export { FilmPageEditMeta } from './FilmPageEditMeta';
+export { FilmPageEditPosterVideo } from './FilmPageEditPosterVideo';
+export { FilmPageEditTrending } from './FilmPageEditTrending';
+export { FilmPageEditPledgeVoting } from './FilmPageEditPledgeVoting';
+export { FilmPageEditTreatment } from './FilmPageEditTreatment';
+export { FilmPageEditMainCharacters } from './FilmPageEditMainCharacters';
+export { FilmPageEditSampleScenes } from './FilmPageEditSampleScenes';
+export { FilmPageEditSynopsisTab } from './FilmPageEditSynopsisTab';
+export { FilmPageEditCastingVote } from './FilmPageEditCastingVote';
+export { FilmPageEditProduction } from './FilmPageEditProduction';
+export { FilmPageEditUpdates } from './FilmPageEditUpdates';
+export { FilmPageEditInvestmentTiers } from './FilmPageEditInvestmentTiers';

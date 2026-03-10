@@ -1,0 +1,219 @@
+export type ReviewComments = {
+  step1?: string;
+  step2?: string;
+  step3?: string;
+  step4?: string;
+  step5?: string;
+};
+
+export type CastMember = {
+  actorName?: string;
+  actorEmail?: string;
+  role?: string;
+};
+
+export type CrewMember = {
+  name?: string;
+  position?: string;
+  email?: string;
+};
+
+export type Step3Data = {
+  cast?: CastMember[];
+  crew?: CrewMember[];
+  wishListCast?: string;
+};
+
+export type BudgetBreakdownItem = {
+  id?: string;
+  label?: string;
+  percent?: number;
+};
+
+export type TimelineData = {
+  preProductionStart?: string;
+  principalPhotography?: string;
+  postProduction?: string;
+  expectedRelease?: string;
+};
+
+export type Step4Data = {
+  totalBudget?: number;
+  breakdown?: BudgetBreakdownItem[];
+  timeline?: TimelineData;
+  campaignDuration?: number;
+};
+
+export type FileSlot = { key: string; url: string } | null;
+
+export type AdminFilm = {
+  id: string;
+  slug: string;
+  title: string;
+  status: string;
+  reviewStatus: 'action_required' | 'no_action' | 'changes_submitted' | null;
+  submissionFeePaid: boolean;
+  logline: string | null;
+  synopsis: string | null;
+  genre: string | null;
+  runtime: string | null;
+  rating: string | null;
+  directorName: string | null;
+  goalAmount: string;
+  currentAmount: string;
+  deadline: string | null;
+  posterUrl: string | null;
+  pageContent: Record<string, unknown> | null;
+  pagePublished: boolean;
+  trendingText: string | null;
+  cachedVotesCount: number | null;
+  cachedAverageScore: number | string | null;
+  step3: Step3Data | null;
+  step4: Step4Data | null;
+  reviewComments: ReviewComments | null;
+  filmmaker: { id: string; email: string };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminFilmDetail = {
+  film: AdminFilm;
+  files: {
+    screenplay: FileSlot;
+    poster: FileSlot;
+    teaser: FileSlot;
+    chainOfTitle: FileSlot;
+  };
+};
+
+export type AdminFilmListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  status: string;
+  reviewStatus: string | null;
+  submissionFeePaid: boolean;
+  pagePublished?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  filmmaker: { id: string; email: string };
+  lastReviewedBy?: { id: string; username: string | null } | null;
+};
+
+export type FilmsListResponse = {
+  films: AdminFilmListItem[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+/** Payload for PATCH /admin/films/:id/page (edit public film page). Slug is read-only from application. */
+export type FilmPageUpdate = {
+  title?: string;
+  synopsis?: string;
+  directorName?: string;
+  genre?: string;
+  goalAmount?: number;
+  deadline?: string;
+  posterUrl?: string;
+  pageContent?: Record<string, unknown>;
+  trendingText?: string;
+  cachedVotesCount?: number;
+  cachedAverageScore?: number;
+  pagePublished?: boolean;
+};
+
+/** One main character for film page (Story & Characters). actorEmail is admin-only, not sent to public frontend. */
+export type MainCharacterForm = {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  imageUrl?: string | null;
+  actorEmail?: string;
+};
+
+export type CastingVoteOptionForm = {
+  id: string;
+  name: string;
+  role: string;
+  votePercent: number;
+  votes: number;
+};
+
+export type CastingVoteForm = {
+  title: string;
+  subtitle: string;
+  cast: CastingVoteOptionForm[];
+  tip: string;
+};
+
+export type ProductionStageForm = {
+  id: string;
+  title: string;
+  period: string;
+  status: 'completed' | 'in_progress' | 'upcoming' | 'planned';
+};
+
+export type ProductionForm = {
+  title: string;
+  stages: ProductionStageForm[];
+};
+
+export type UpdateItemForm = {
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+};
+
+export type SampleScenesForm = {
+  title: string;
+  unlockMessage: string;
+  pledgeAmount: number;
+  description: string;
+};
+
+export type PledgeVotingCategoryForm = {
+  id: string;
+  label: string;
+  icon: 'story' | 'script' | 'casting';
+  labelLeft: string;
+  labelRight: string;
+  communityScore?: number;
+  communityMax?: number;
+};
+
+export type PledgeVotingForm = {
+  title: string;
+  subtitle: string;
+  pledgeAmount: number;
+  categories: PledgeVotingCategoryForm[];
+};
+
+/** One investment tier for film page sidebar (donation options). Matches web FilmDetailSidebar. */
+export type InvestmentTierForm = {
+  id: string;
+  amount: number;
+  name: string;
+  benefits: string[];
+  investorsCount?: number;
+};
+
+/** Film page edit form state (includes slug for display and pageContent-derived fields). */
+export type FilmPageFormState = FilmPageUpdate & {
+  slug?: string;
+  treatment?: string;
+  storySynopsis?: string;
+  whyMatters?: string;
+  tags?: string;
+  mainCharacters?: MainCharacterForm[];
+  castingVote?: CastingVoteForm;
+  productionTitle?: string;
+  productionStages?: ProductionStageForm[];
+  updatesItems?: UpdateItemForm[];
+  sampleScenes?: SampleScenesForm;
+  pledgeVoting?: PledgeVotingForm;
+  /** Sidebar donation tiers (Investment Tiers) shown on film detail page. */
+  sidebarTiers?: InvestmentTierForm[];
+};

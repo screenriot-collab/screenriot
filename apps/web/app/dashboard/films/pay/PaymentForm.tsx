@@ -1,0 +1,125 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { paySubmissionFee } from '@/lib/films-api';
+
+interface PaymentFormProps {
+  filmId: string;
+  filmTitle: string;
+}
+
+export function PaymentForm({ filmId, filmTitle }: PaymentFormProps) {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  async function handlePay() {
+    setLoading(true);
+    setError('');
+    try {
+      await paySubmissionFee(filmId, session?.accessToken);
+      setSuccess(true);
+      setTimeout(() => router.push('/dashboard/films'), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="mx-auto max-w-lg rounded-xl border border-green-500/20 bg-green-500/5 p-8 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+          <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold text-white">Payment Successful</h2>
+        <p className="mt-2 text-sm text-gray-400">
+          Your submission fee for &ldquo;{filmTitle}&rdquo; has been processed. Your project is now under review.
+        </p>
+        <p className="mt-4 text-xs text-gray-500">Redirecting to My Films…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-lg rounded-xl border border-white/10 bg-screenriot-bg-card p-8">
+      <h2 className="text-xl font-semibold text-white">Pay Submission Fee</h2>
+      <p className="mt-2 text-sm text-gray-400">
+        Complete the payment for &ldquo;{filmTitle}&rdquo; to submit it for review.
+      </p>
+
+      <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.02] p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-400">Project</span>
+          <span className="text-sm font-medium text-white">{filmTitle}</span>
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
+          <span className="text-sm text-gray-400">Submission Fee</span>
+          <span className="text-lg font-semibold text-white">$300 USD</span>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+        <p className="flex items-start gap-2 text-xs text-amber-400">
+          <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+          </svg>
+          <span>
+            Payment gateway is under development. Click the button below to simulate a successful payment and submit your project for review.
+          </span>
+        </p>
+      </div>
+
+      {error && (
+        <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-6 flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-screenriot-red px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-screenriot-red/80 focus:outline-none focus:ring-2 focus:ring-screenriot-red/50 disabled:opacity-50"
+          aria-label={`Pay submission fee for ${filmTitle}`}
+        >
+          {loading ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Processing…
+            </>
+          ) : (
+            'Pay $300 & Submit for Review'
+          )}
+        </button>
+
+        <div className="flex justify-center gap-4">
+          <Link
+            href="/dashboard/films"
+            className="text-sm text-gray-500 transition-colors hover:text-gray-300"
+          >
+            Back to My Films
+          </Link>
+          <Link
+            href={`/dashboard/submit-project?film=${filmId}`}
+            className="text-sm text-screenriot-accent-blue transition-colors hover:text-screenriot-accent-blue/80"
+          >
+            Edit Project
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
