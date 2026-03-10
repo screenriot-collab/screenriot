@@ -4,11 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { fetchFilmById } from '@/lib/films-api';
 import { NewContributionForm } from '@/components/contributions/NewContributionForm';
 
-interface PageProps {
+type DashboardFilmContributePageProps = {
   params: { id: string };
-}
+};
 
-export default async function NewContributionPage({ params }: PageProps) {
+export default async function NewContributionPage({ params }: DashboardFilmContributePageProps) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== 'filmmaker') {
     redirect('/dashboard');
