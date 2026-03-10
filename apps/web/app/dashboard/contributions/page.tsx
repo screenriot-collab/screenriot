@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { fetchMyContributions } from '@/lib/contributions-api';
+import { fetchMyContributions, type Contribution } from '@/lib/contributions-api';
 import { ContributionsView } from '@/components/contributions/ContributionsView';
 
 export default async function ContributionsPage() {
@@ -11,7 +11,7 @@ export default async function ContributionsPage() {
   }
 
   const accessToken = session.accessToken;
-  let contributions = [];
+  let contributions: Contribution[] = [];
   try {
     contributions = await fetchMyContributions(accessToken);
   } catch (err) {

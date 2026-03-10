@@ -4,26 +4,39 @@ import { authOptions } from '@/lib/auth';
 import { fetchFilmById } from '@/lib/films-api';
 import { NewContributionForm } from '@/components/contributions/NewContributionForm';
 
-type DashboardFilmContributePageProps = {
-  params: { id: string };
-};
-
-export default async function NewContributionPage({ params }: DashboardFilmContributePageProps) {
+export default async function NewContributionPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== 'filmmaker') {
     redirect('/dashboard');
   }
 
+  const accessToken = (session as { accessToken?: string }).accessToken;
+  if (!accessToken) {
+    redirect('/dashboard');
+  }
+
   let film;
   try {
-    film = await fetchFilmById(params.id, session.accessToken);
+    film = await fetchFilmById(id, session.accessToken);
   } catch {
+    redirect('/dashboard/films');
+  }
+
+  if (!film) {
     redirect('/dashboard/films');
   }
 
   // Ensure film is approved and belongs to the user
   if (
-    (film.status !== 'approved' && film.status !== 'fundraising' && film.status !== 'funded' && film.status !== 'closed') ||
+    (film.status !== 'approved' &&
+      film.status !== 'fundraising' &&
+      film.status !== 'funded' &&
+      film.status !== 'closed') ||
     !film.pagePublished
   ) {
     redirect('/dashboard/films');
@@ -38,7 +51,7 @@ export default async function NewContributionPage({ params }: DashboardFilmContr
       </p>
       
       <div className="mt-8 max-w-2xl">
-        <NewContributionForm filmId={film.id} accessToken={session.accessToken} />
+        <NewContributionForm filmId={film.id} accessToken={accessToken} />
       </div>
     </>
   );

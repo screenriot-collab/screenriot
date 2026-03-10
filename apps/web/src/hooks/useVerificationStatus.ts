@@ -43,7 +43,7 @@ export function useVerificationStatus(): {
     void fetchVerification();
   }, [status, fetchVerification]);
 
-  const isVerified = verification?.status === 'verified' ?? false;
+  const isVerified = verification?.status === 'verified';
 
   return {
     verification: verification ?? null,
