@@ -5,7 +5,7 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
-    "lint": "nest lint",
+    "lint": "tsc --noEmit",
     "test": "jest",
     "test:e2e": "jest --config jest-e2e.json",
     "db:generate": "prisma generate --schema=../../prisma/schema.prisma",

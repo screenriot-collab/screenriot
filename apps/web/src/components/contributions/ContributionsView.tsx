@@ -68,7 +68,7 @@ export function ContributionsView({ contributions }: { contributions: Contributi
             {item.comment && (
               <div className="mt-4">
                 <h3 className="text-xs font-medium text-gray-400">Your Comment</h3>
-                <p className="mt-1 text-sm text-gray-300 italic">"{item.comment}"</p>
+                <p className="mt-1 text-sm text-gray-300 italic">&quot;{item.comment}&quot;</p>
               </div>
             )}
 
