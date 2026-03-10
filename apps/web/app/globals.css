@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-screenriot-bg text-gray-100 antialiased;
+  }
+}
+
+/* Pledge voting range slider: transparent track so custom fill div shows */
+.pledge-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.pledge-slider::-webkit-slider-runnable-track {
+  background: transparent;
+  border: none;
+}
+.pledge-slider::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+.pledge-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgb(59 130 246);
+  cursor: pointer;
+  border: 2px solid rgb(15 23 42);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.pledge-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgb(59 130 246);
+  cursor: pointer;
+  border: 2px solid rgb(15 23 42);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}

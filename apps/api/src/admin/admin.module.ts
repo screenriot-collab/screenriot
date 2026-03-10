@@ -1,0 +1,45 @@
+import { Module } from '@nestjs/common';
+import { AdminController } from './admin.controller';
+import { AdminAuthController } from './admin-auth.controller';
+import { AdminUsersController } from './admin-users.controller';
+import { AdminFilmsController } from './admin-films.controller';
+import { AdminVerificationController } from './admin-verification.controller';
+import { AdminSiteUsersController } from './admin-site-users.controller';
+import { AdminStatsController } from './admin-stats.controller';
+import { AdminInvestmentsController } from './admin-investments.controller';
+import { AdminContributionsController } from './admin-contributions.controller';
+import { AdminFilmsService } from './admin-films.service';
+import { AdminUsersService } from './admin-users.service';
+import { AdminVerificationService } from './admin-verification.service';
+import { AdminSiteUsersService } from './admin-site-users.service';
+import { AdminStatsService } from './admin-stats.service';
+import { AdminInvestmentsService } from './admin-investments.service';
+import { AdminContributionsService } from './admin-contributions.service';
+import { AuthModule } from '../auth/auth.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { MailModule } from '../mail/mail.module';
+
+@Module({
+  imports: [AuthModule, PrismaModule, MailModule],
+  controllers: [
+    AdminController,
+    AdminAuthController,
+    AdminUsersController,
+    AdminFilmsController,
+    AdminVerificationController,
+    AdminSiteUsersController,
+    AdminStatsController,
+    AdminInvestmentsController,
+    AdminContributionsController,
+  ],
+  providers: [
+    AdminFilmsService,
+    AdminUsersService,
+    AdminVerificationService,
+    AdminSiteUsersService,
+    AdminStatsService,
+    AdminInvestmentsService,
+    AdminContributionsService,
+  ],
+})
+export class AdminModule {}
