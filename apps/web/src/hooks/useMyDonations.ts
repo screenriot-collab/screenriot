@@ -42,6 +42,14 @@ export function useMyDonations(): {
     void fetchDonations();
   }, [status, fetchDonations]);
 
+  useEffect(() => {
+    const onConfirmed = () => {
+      void fetchDonations();
+    };
+    window.addEventListener('screenriot:donation-confirmed', onConfirmed);
+    return () => window.removeEventListener('screenriot:donation-confirmed', onConfirmed);
+  }, [fetchDonations]);
+
   const totalInvested = donations.reduce((sum, d) => sum + d.amount, 0);
 
   return {

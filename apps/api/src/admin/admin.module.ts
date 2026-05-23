@@ -8,6 +8,9 @@ import { AdminSiteUsersController } from './admin-site-users.controller';
 import { AdminStatsController } from './admin-stats.controller';
 import { AdminInvestmentsController } from './admin-investments.controller';
 import { AdminContributionsController } from './admin-contributions.controller';
+import { AdminScriptCreditsController } from './admin-script-credits.controller';
+import { AdminSubmissionFeesController } from './admin-submission-fees.controller';
+import { AdminCastingSuggestionsController } from './admin-casting-suggestions.controller';
 import { AdminFilmsService } from './admin-films.service';
 import { AdminUsersService } from './admin-users.service';
 import { AdminVerificationService } from './admin-verification.service';
@@ -15,12 +18,17 @@ import { AdminSiteUsersService } from './admin-site-users.service';
 import { AdminStatsService } from './admin-stats.service';
 import { AdminInvestmentsService } from './admin-investments.service';
 import { AdminContributionsService } from './admin-contributions.service';
+import { AdminScriptCreditsService } from './admin-script-credits.service';
+import { AdminSubmissionFeesService } from './admin-submission-fees.service';
+import { AdminCastingSuggestionsService } from './admin-casting-suggestions.service';
 import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
+import { FilmsModule } from '../films/films.module';
+import { DonationsModule } from '../donations/donations.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, MailModule],
+  imports: [AuthModule, PrismaModule, MailModule, FilmsModule, DonationsModule],
   controllers: [
     AdminController,
     AdminAuthController,
@@ -31,6 +39,9 @@ import { MailModule } from '../mail/mail.module';
     AdminStatsController,
     AdminInvestmentsController,
     AdminContributionsController,
+    AdminScriptCreditsController,
+    AdminSubmissionFeesController,
+    AdminCastingSuggestionsController,
   ],
   providers: [
     AdminFilmsService,
@@ -40,6 +51,9 @@ import { MailModule } from '../mail/mail.module';
     AdminStatsService,
     AdminInvestmentsService,
     AdminContributionsService,
+    AdminScriptCreditsService,
+    AdminSubmissionFeesService,
+    AdminCastingSuggestionsService,
   ],
 })
 export class AdminModule {}

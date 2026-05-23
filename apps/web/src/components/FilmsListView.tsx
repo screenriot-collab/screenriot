@@ -156,7 +156,7 @@ export function FilmsListView({ films, onDelete }: FilmsListViewProps) {
                         film.reviewStatus === 'action_required'
                           ? 'bg-amber-500/20 text-amber-400'
                           : film.reviewStatus === 'changes_submitted'
-                            ? 'bg-sky-500/20 text-sky-400'
+                            ? 'bg-screenriot-accent-blue/20 text-screenriot-accent-blue'
                             : 'bg-white/10 text-screenriot-muted'
                       }`}
                     >
@@ -171,12 +171,13 @@ export function FilmsListView({ films, onDelete }: FilmsListViewProps) {
             {isApprovedAndPublished(film) ? (
               <>
                 <Link
-                  href={`/dashboard/films/${film.id}/contribute`}
-                  className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-2 py-1.5 text-xs font-medium text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue"
-                  aria-label={`Propose changes to ${film.title}`}
-                  title="Propose changes"
+                  href={`/dashboard/films/${film.id}/preview`}
+                  className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/20 bg-white/5 px-2 py-1.5 text-xs font-medium text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue"
+                  aria-label={`Edit published page for ${film.title}`}
+                  title="Edit published page"
                 >
-                  Propose changes
+                  <IconEdit className="h-3.5 w-3.5" aria-hidden />
+                  Edit page
                 </Link>
                 <Link
                   href={`/films/${film.slug}`}

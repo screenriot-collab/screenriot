@@ -30,12 +30,11 @@ export function FilmPageEditCastingVote({ form, setForm }: Props) {
       aria-labelledby="section-casting-vote"
     >
       <h2 id="section-casting-vote" className={CLASS_SECTION_TITLE}>
-        Tab — Casting Vote
+        Fan voting — Dream cast
       </h2>
       <p className={CLASS_SECTION_DESC}>
-        Initial candidates can come from Wish List Cast in the application.
-        Edit this list for the public film page; changes here do not modify
-        the application data.
+        Shown under Fan Voting on the public page (not in tabs). Initial candidates can come
+        from Wish List Cast in the application. Edits here do not modify application data.
       </p>
       <div className="space-y-3">
         <div>

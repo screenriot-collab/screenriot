@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { IMAGES } from '@/lib/constants';
 import {
@@ -69,6 +70,40 @@ function formatDate(iso: string): string {
   });
 }
 
+const SUBMIT_PROJECT_HREF = '/dashboard/submit-project';
+const MY_FILMS_HREF = '/dashboard/films';
+
+const submitProjectLinkClass =
+  'font-medium text-screenriot-accent underline underline-offset-2 hover:text-screenriot-accent/90';
+
+/** Link phrases in admin feedback (e.g. "upload your film project") to submit flow. */
+function linkifyAdminFeedback(text: string): ReactNode {
+  const patterns: { regex: RegExp; href: string }[] = [
+    { regex: /upload your film project/i, href: SUBMIT_PROJECT_HREF },
+    { regex: /submit your project/i, href: SUBMIT_PROJECT_HREF },
+    { regex: /\bmy films\b/i, href: MY_FILMS_HREF },
+  ];
+
+  for (const { regex, href } of patterns) {
+    const match = regex.exec(text);
+    if (!match || match.index === undefined) continue;
+    const before = text.slice(0, match.index);
+    const phrase = match[0];
+    const after = text.slice(match.index + phrase.length);
+    return (
+      <>
+        {before}
+        <Link href={href} className={submitProjectLinkClass}>
+          {phrase}
+        </Link>
+        {linkifyAdminFeedback(after)}
+      </>
+    );
+  }
+
+  return text;
+}
+
 const FEEDBACK_STYLES = {
   pending: {
     border: 'border-yellow-500/30',
@@ -121,7 +156,7 @@ function AdminFeedbackBlock({
       </div>
 
       {feedback ? (
-        <p className="mt-2 text-sm text-gray-300">{feedback}</p>
+        <p className="mt-2 text-sm text-gray-300">{linkifyAdminFeedback(feedback)}</p>
       ) : (
         <p className="mt-2 text-sm text-screenriot-muted italic">
           {status === 'pending' && 'No feedback yet. Your documents are being reviewed.'}

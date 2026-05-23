@@ -1,5 +1,6 @@
 import { useState, Fragment } from 'react';
 import { Link } from 'react-router-dom';
+import { fulfillDonationFromStripe } from '@/lib/api';
 import { useFilmsWithInvestments } from '@/hooks/useFilmsWithInvestments';
 
 const STATUS_OPTIONS = [
@@ -43,9 +44,38 @@ export default function FilmsWithInvestments() {
     donationsByFilmId,
     loadingDonations,
     loadDonationsForFilm,
+    refetch,
   } = useFilmsWithInvestments();
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [stripeId, setStripeId] = useState('');
+  const [fulfillLoading, setFulfillLoading] = useState(false);
+  const [fulfillMessage, setFulfillMessage] = useState<string | null>(null);
+  const [fulfillError, setFulfillError] = useState<string | null>(null);
+
+  async function handleFulfill(e: React.FormEvent) {
+    e.preventDefault();
+    const id = stripeId.trim();
+    if (!id) return;
+    setFulfillLoading(true);
+    setFulfillMessage(null);
+    setFulfillError(null);
+    try {
+      const res = await fulfillDonationFromStripe(id);
+      setFulfillMessage(
+        res.created
+          ? `Recorded $${res.amount.toLocaleString()} investment in “${res.filmTitle}” for ${res.userEmail ?? 'user'}.`
+          : `Already recorded: $${res.amount.toLocaleString()} in “${res.filmTitle}” (${res.userEmail ?? 'user'}).`,
+      );
+      setStripeId('');
+      void refetch();
+      if (expandedId) void loadDonationsForFilm(expandedId);
+    } catch (err) {
+      setFulfillError(err instanceof Error ? err.message : 'Failed to apply investment');
+    } finally {
+      setFulfillLoading(false);
+    }
+  }
 
   function toggleExpand(filmId: string) {
     if (expandedId === filmId) {
@@ -62,6 +92,47 @@ export default function FilmsWithInvestments() {
       <p className="mt-1 text-sm text-gray-500">
         Films that have at least one donation. Expand a row to see donation list.
       </p>
+
+      <section
+        className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4"
+        aria-labelledby="fulfill-investment-heading"
+      >
+        <h2 id="fulfill-investment-heading" className="text-sm font-semibold text-amber-200">
+          Apply investment from Stripe
+        </h2>
+        <p className="mt-1 text-xs text-gray-400">
+          Payments list → copy <code className="text-amber-100">pi_…</code> from Description ($100+ for
+          investments). Use if payment succeeded but film / dashboard show nothing.
+        </p>
+        <form onSubmit={(e) => void handleFulfill(e)} className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={stripeId}
+            onChange={(e) => setStripeId(e.target.value)}
+            placeholder="pi_… or cs_…"
+            className="min-w-0 flex-1 rounded-md border border-white/10 bg-admin-bg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-admin-accent/60 focus:outline-none focus:ring-1 focus:ring-admin-accent/30"
+            spellCheck={false}
+            aria-label="Stripe Payment Intent or Checkout session id"
+          />
+          <button
+            type="submit"
+            disabled={fulfillLoading || !stripeId.trim()}
+            className="shrink-0 rounded-md bg-admin-accent px-4 py-2 text-sm font-medium text-white hover:bg-admin-accent/90 disabled:opacity-50"
+          >
+            {fulfillLoading ? 'Applying…' : 'Apply investment'}
+          </button>
+        </form>
+        {fulfillMessage ? (
+          <p className="mt-2 text-sm text-emerald-400" role="status">
+            {fulfillMessage}
+          </p>
+        ) : null}
+        {fulfillError ? (
+          <p className="mt-2 text-sm text-red-400" role="alert">
+            {fulfillError}
+          </p>
+        ) : null}
+      </section>
 
       {error && (
         <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400" role="alert">

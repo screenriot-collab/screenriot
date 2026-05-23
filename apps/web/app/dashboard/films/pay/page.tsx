@@ -4,7 +4,13 @@ import { authOptions } from '@/lib/auth';
 import { fetchFilmById } from '@/lib/films-api';
 import { PaymentForm } from './PaymentForm';
 
-type PageProps = { searchParams: Promise<{ film?: string }> };
+type PageProps = {
+  searchParams: Promise<{
+    film?: string;
+    checkout?: string;
+    session_id?: string;
+  }>;
+};
 
 export default async function FilmsPayPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
@@ -23,9 +29,17 @@ export default async function FilmsPayPage({ searchParams }: PageProps) {
     redirect('/dashboard/films');
   }
 
-  if (film.submissionFeePaid) {
+  if (film.submissionFeePaid && params.checkout !== 'success') {
     redirect('/dashboard/films');
   }
 
-  return <PaymentForm filmId={film.id} filmTitle={film.title} />;
+  return (
+    <PaymentForm
+      filmId={film.id}
+      filmTitle={film.title}
+      checkoutSuccess={params.checkout === 'success'}
+      checkoutSessionId={params.session_id}
+      checkoutCancelled={params.checkout === 'cancelled'}
+    />
+  );
 }

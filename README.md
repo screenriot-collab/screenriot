@@ -56,6 +56,10 @@ git commit -m "chore: bootstrap Screen Riot monorepo"
 git push -u origin dev
 ```
 
+## Film detail page (design alignment)
+
+Film detail — open gaps vs design: **[apps/web/docs/FILM_DETAIL_ALIGNMENT.md](apps/web/docs/FILM_DETAIL_ALIGNMENT.md)** (remaining API/UI items).
+
 ## MinIO (local S3)
 
 - **S3 API endpoint (from host):** `http://localhost:9000`  
@@ -71,6 +75,10 @@ Environment for `apps/api` (local):
 - `S3_BUCKET=screenriot`
 
 From inside Docker containers the endpoint is `http://minio:9000`.
+
+**Port 9000 already in use** (another project’s MinIO): in your local `.env` only, set `MINIO_API_PORT=9002`, `MINIO_CONSOLE_PORT=9003`, and `S3_ENDPOINT=http://localhost:9002`, then `docker compose up -d --force-recreate minio`. Production uses its own `S3_*` in the host environment (R2/S3), not these ports.
+
+**Posters/videos 404 locally:** files may have been uploaded to the wrong MinIO instance; re-upload poster/teaser/avatar after MinIO is reachable on the port in `S3_ENDPOINT`.
 
 ## Scripts (from repo root)
 

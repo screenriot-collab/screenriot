@@ -151,7 +151,13 @@ export default function FilmDetail() {
                   {step3Cast.map((c, idx) => (
                     <li key={c.actorEmail ?? c.actorName ?? idx} className="text-gray-300">
                       <span>{c.actorName || '—'}</span>
-                      <span className="text-gray-500"> · {c.role || '—'}</span>
+                      <span className="text-gray-500">
+                        {' '}
+                        · {(c as { character?: string }).character || c.role || '—'}
+                        {(c as { tier?: string }).tier
+                          ? ` (${(c as { tier?: string }).tier})`
+                          : ''}
+                      </span>
                       <span className="text-gray-600"> ({c.actorEmail || '—'})</span>
                     </li>
                   ))}
@@ -171,9 +177,31 @@ export default function FilmDetail() {
                 </ul>
               </div>
             </div>
-            <div className="mt-2 text-sm text-gray-300">
-              <span className="text-gray-500">Wish list cast: </span>
-              <span>{step3.wishListCast || '—'}</span>
+            <div className="mt-2">
+              <p className="mb-1.5 text-xs font-medium text-gray-500">Wish list cast</p>
+              <ul className="space-y-1 text-sm">
+                {(!Array.isArray(step3.wishListCast) || step3.wishListCast.length === 0) &&
+                  !(typeof step3.wishListCast === 'string' && step3.wishListCast.trim()) && (
+                    <li className="text-gray-600">No wish list provided.</li>
+                  )}
+                {Array.isArray(step3.wishListCast) &&
+                  step3.wishListCast.map((w, idx) => (
+                    <li key={idx} className="text-gray-300">
+                      <span>{w.actorName || '—'}</span>
+                      <span className="text-gray-500">
+                        {' '}
+                        · {w.character || (w as { role?: string }).role || '—'}
+                        {w.tier ? ` (${w.tier})` : ''}
+                      </span>
+                      {w.status === 'verified' && (
+                        <span className="ml-1 text-green-400">[Verified]</span>
+                      )}
+                    </li>
+                  ))}
+                {typeof step3.wishListCast === 'string' && step3.wishListCast.trim() && (
+                  <li className="text-gray-300">{step3.wishListCast}</li>
+                )}
+              </ul>
             </div>
           </StepCard>
 

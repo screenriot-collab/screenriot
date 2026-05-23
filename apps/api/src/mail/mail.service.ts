@@ -38,17 +38,35 @@ export class MailService {
 
   async sendMail(options: SendMailOptions): Promise<void> {
     if (!this.transporter) {
-      // No mail config: log and skip (e.g. in tests or when MAIL_HOST not set)
       console.warn('[Mail] MAIL_HOST not set, skipping send:', options.to, options.subject);
+      this.logDevPreview(options);
       return;
     }
+
     const from = process.env.MAIL_FROM ?? 'noreply@screenriot.local';
-    await this.transporter.sendMail({
-      from,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text,
-    });
+    try {
+      await this.transporter.sendMail({
+        from,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[Mail] Failed to send to ${options.to} (${options.subject}): ${message}`,
+      );
+      this.logDevPreview(options);
+      // Do not throw: auth flows (forgot-password, verify-email) must not 500 when SMTP is down.
+    }
+  }
+
+  /** Log link/text locally when SMTP is unavailable (e.g. MailHog not running). */
+  private logDevPreview(options: SendMailOptions): void {
+    if (process.env.NODE_ENV === 'production') return;
+    if (options.text) {
+      console.log(`[Mail] Dev preview for ${options.to}:\n${options.text}`);
+    }
   }
 }

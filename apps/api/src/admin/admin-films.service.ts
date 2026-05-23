@@ -5,6 +5,11 @@ import { S3Service } from '../s3/s3.service';
 import { ListFilmsQueryDto } from './dto/list-films.dto';
 import { UpdateFilmReviewDto } from './dto/update-film-review.dto';
 import { UpdateFilmPageDto } from './dto/update-film-page.dto';
+import {
+  step3CastToMainCharacters,
+  wishListToCastingVoteOptions,
+  type Step3Shape,
+} from '../films/cast-step3.util';
 
 const PUBLISHED_STATUSES: FilmStatus[] = [
   FilmStatus.approved,
@@ -223,6 +228,12 @@ export class AdminFilmsService {
     const existing = await this.prisma.film.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Film not found');
 
+    if (dto.status === FilmStatus.approved && !existing.submissionFeePaid) {
+      throw new BadRequestException(
+        'Cannot approve: submission fee has not been paid. The filmmaker must complete payment first.',
+      );
+    }
+
     const updated = await this.prisma.film.update({
       where: { id },
       data: {
@@ -230,7 +241,6 @@ export class AdminFilmsService {
         reviewStatus: dto.reviewStatus ?? undefined,
         reviewComments: (dto.reviewComments as Prisma.InputJsonValue) ?? undefined,
         lastReviewedById: adminId,
-        ...(dto.status === FilmStatus.approved ? { submissionFeePaid: true } : {}),
         ...(dto.status === FilmStatus.rejected ? { pagePublished: false } : {}),
       },
     });
@@ -242,45 +252,6 @@ export class AdminFilmsService {
     return { film: updated };
   }
 
-  /** Map step3.cast to mainCharacters. Use actorName for name; never pass email to frontend. */
-  private step3CastToMainCharacters(step3: { cast?: { actorName?: string; actorEmail?: string; role?: string }[] } | null): { id: string; name: string; role: string; description: string; imageUrl: null }[] {
-    const cast = step3?.cast ?? [];
-    return cast
-      .filter((row) => (row.actorName ?? '').trim() || (row.actorEmail ?? '').trim() || (row.role ?? '').trim())
-      .map((row, i) => {
-        const actorName = (row.actorName ?? '').trim();
-        const actorEmail = (row.actorEmail ?? '').trim();
-        const name = actorName || (/@/.test(actorEmail) ? '—' : (actorEmail || '—'));
-        return {
-          id: `cast-${i}`,
-          name,
-          role: (row.role ?? '').trim() || '—',
-          description: '',
-          imageUrl: null,
-        };
-      });
-  }
-
-  private parseWishListCast(
-    wishListCast: string | null | undefined,
-  ): { id: string; name: string; role: string; votePercent: number; votes: number }[] {
-    if (!wishListCast) {
-      return [];
-    }
-    const items = wishListCast
-      .split(/[,;\n]/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    return items.map((name, index) => ({
-      id: `wish-${index}`,
-      name,
-      role: '',
-      votePercent: 0,
-      votes: 0,
-    }));
-  }
-
   /**
    * One-time copy from application (step3, step4, synopsis) to pageContent when approving.
    */
@@ -288,14 +259,9 @@ export class AdminFilmsService {
     const film = await this.prisma.film.findUnique({ where: { id: filmId } });
     if (!film || film.pageContent) return;
 
-    const step3 = film.step3 as
-      | {
-          cast?: { actorName?: string; actorEmail?: string; role?: string }[];
-          wishListCast?: string;
-        }
-      | null;
-    const mainCharacters = this.step3CastToMainCharacters(step3);
-    const castingVoteCast = this.parseWishListCast(step3?.wishListCast ?? null);
+    const step3 = film.step3 as Step3Shape | null;
+    const mainCharacters = step3CastToMainCharacters(step3);
+    const castingVoteCast = wishListToCastingVoteOptions(step3?.wishListCast ?? null);
 
     // budgetBreakdown is not stored here; public API reads it from step4.breakdown
     const pageContent: Record<string, unknown> = {
@@ -317,15 +283,13 @@ export class AdminFilmsService {
       treatment: { act1: film.synopsis ?? '', act2: '' },
       mainCharacters,
       sampleScenes: {
-        title: 'Sample Scenes',
-        unlockMessage: 'Unlock sample scenes to get a deeper understanding of the script quality and dialogue.',
-        pledgeAmount: 50,
+        title: 'Script Sample',
+        unlockMessage: 'Sample scenes will be published when the filmmaker adds them.',
         description: '',
       },
       pledgeVoting: {
-        title: 'Pledge-Based Voting',
-        subtitle: '$25 pledge per category • Held in escrow • Converts to investment if your choice wins',
-        pledgeAmount: 25,
+        title: 'Fan Voting',
+        subtitle: 'Rate this project and vote for your dream cast • Voting is free',
         categories: [
           { id: 'story', label: 'Story Uniqueness', icon: 'story', labelLeft: 'Not Unique', labelRight: 'Highly Original' },
           { id: 'script', label: 'Script Brilliance', icon: 'script', labelLeft: 'Needs Work', labelRight: 'Exceptional' },

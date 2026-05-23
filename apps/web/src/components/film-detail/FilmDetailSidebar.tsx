@@ -1,4 +1,8 @@
+'use client';
+
+import { useCallback, useState } from 'react';
 import type { FilmDetailSidebarMock, InvestmentTier } from '@/markup/film-detail';
+import { formatNumber } from '@/lib/format-number';
 import { FilmDetailInvestCta } from './FilmDetailInvestCta';
 import { FilmDetailInvestBlock } from './FilmDetailInvestBlock';
 
@@ -10,13 +14,36 @@ function formatPledged(value: number): string {
 
 interface FilmDetailSidebarProps {
   data: FilmDetailSidebarMock;
-  /** When present, tier cards show Invest buttons and redirect to Stripe Checkout. */
   filmId?: string;
   slug?: string;
+  hasCommunityScore?: boolean;
 }
 
-export function FilmDetailSidebar({ data, filmId, slug }: FilmDetailSidebarProps) {
+export function FilmDetailSidebar({
+  data,
+  filmId,
+  slug,
+  hasCommunityScore = false,
+}: FilmDetailSidebarProps) {
   const percent = Math.min(100, Math.round((data.pledged / data.goal) * 100));
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+
+  const handleShare = useCallback(async () => {
+    const url =
+      typeof window !== 'undefined' && slug
+        ? `${window.location.origin}/films/${encodeURIComponent(slug)}`
+        : typeof window !== 'undefined'
+          ? window.location.href
+          : '';
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareFeedback('Link copied to clipboard');
+    } catch {
+      setShareFeedback('Could not copy link');
+    }
+    window.setTimeout(() => setShareFeedback(null), 3000);
+  }, [slug]);
 
   return (
     <aside
@@ -28,15 +55,15 @@ export function FilmDetailSidebar({ data, filmId, slug }: FilmDetailSidebarProps
           <h2 id="sidebar-funding-heading" className="sr-only">
             Funding and investment
           </h2>
-          <p className="text-2xl font-semibold text-sky-400">
+          <p className="text-3xl font-semibold text-screenriot-accent-blue">
             {formatPledged(data.pledged)}
-            <span className="ml-1 text-base font-normal text-gray-400">
-              pledged of {formatPledged(data.goal)} goal
-            </span>
           </p>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <p className="mt-1 text-sm text-screenriot-muted">
+            pledged of {formatPledged(data.goal)} goal
+          </p>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-sky-500 transition-[width] duration-300"
+              className="h-full rounded-full bg-screenriot-accent-blue transition-[width] duration-300"
               style={{ width: `${percent}%` }}
             />
           </div>
@@ -54,12 +81,14 @@ export function FilmDetailSidebar({ data, filmId, slug }: FilmDetailSidebarProps
               {data.daysLeft} days to go
             </span>
           </div>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-400">
-            <svg className="h-4 w-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-            {data.averageScore} average score • {data.votesCount.toLocaleString()} votes
-          </p>
+          {hasCommunityScore ? (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-400">
+              <svg className="h-4 w-4 text-screenriot-accent" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              {data.averageScore.toFixed(1)} average score • {formatNumber(data.votesCount)} votes
+            </p>
+          ) : null}
           <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-400">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
@@ -74,7 +103,7 @@ export function FilmDetailSidebar({ data, filmId, slug }: FilmDetailSidebarProps
           ) : (
             <a
               href="#invest"
-              className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-screenriot-bg"
+              className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-screenriot-accent-blue to-blue-700 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg"
             >
               Invest in This Film
             </a>
@@ -82,39 +111,44 @@ export function FilmDetailSidebar({ data, filmId, slug }: FilmDetailSidebarProps
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Add to watchlist"
+              disabled
+              title="Watchlist coming soon"
+              className="flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-gray-500 opacity-60"
+              aria-label="Watchlist (coming soon)"
+              aria-disabled="true"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
               </svg>
               Watchlist
             </button>
             <button
               type="button"
-              className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Share"
+              onClick={() => void handleShare()}
+              className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue"
+              aria-label="Copy link to this project"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c-18.048-.946-32.16 12.35-32.16 26.016 0 1.542.198 3.05.574 4.486m0-2.186c8.683 0 16.342 2.118 23.2 6.841a2.25 2.25 0 0 0 2.586 0c5.962-3.678 13.517-4.841 23.2-6.841m-23.2 26.016c8.683 0 16.342-2.118 23.2-6.841a2.25 2.25 0 0 0 2.586 0c5.962 3.678 13.517 4.841 23.2 6.841" />
               </svg>
               Share
             </button>
           </div>
+          {shareFeedback ? (
+            <p className="text-center text-xs text-screenriot-accent" role="status" aria-live="polite">
+              {shareFeedback}
+            </p>
+          ) : null}
         </div>
 
         <div id="invest">
           <h3 className="text-base font-semibold text-white">Investment Tiers</h3>
           {filmId && slug ? (
-            <FilmDetailInvestBlock
-              filmId={filmId}
-              slug={slug}
-              tiers={data.tiers}
-            />
+            <FilmDetailInvestBlock filmId={filmId} slug={slug} tiers={data.tiers} />
           ) : (
             <ul className="mt-3 space-y-3">
-              {data.tiers.map((tier) => (
-                <TierCard key={tier.id} tier={tier} />
+              {data.tiers.map((tier, index) => (
+                <TierCard key={tier.id} tier={tier} highlighted={index === 0} />
               ))}
             </ul>
           )}
@@ -124,11 +158,15 @@ export function FilmDetailSidebar({ data, filmId, slug }: FilmDetailSidebarProps
   );
 }
 
-function TierCard({ tier }: { tier: InvestmentTier }) {
+function TierCard({ tier, highlighted }: { tier: InvestmentTier; highlighted?: boolean }) {
   return (
-    <li className="rounded-lg border border-white/10 bg-white/[0.02] p-4 transition-colors hover:border-sky-500/30">
+    <li
+      className={`rounded-lg bg-white/[0.02] p-4 transition-colors hover:border-screenriot-accent-blue/30 ${
+        highlighted ? 'border-2 border-screenriot-accent-blue' : 'border border-white/10'
+      }`}
+    >
       <p className="font-semibold text-white">
-        ${tier.amount.toLocaleString()} - {tier.name}
+        ${formatNumber(tier.amount)} - {tier.name}
       </p>
       <ul className="mt-2 space-y-1 text-sm text-gray-400">
         {tier.benefits.map((b) => (

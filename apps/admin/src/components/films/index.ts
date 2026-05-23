@@ -5,6 +5,8 @@ export { FilmPageEditPledgeVoting } from './FilmPageEditPledgeVoting';
 export { FilmPageEditTreatment } from './FilmPageEditTreatment';
 export { FilmPageEditMainCharacters } from './FilmPageEditMainCharacters';
 export { FilmPageEditSampleScenes } from './FilmPageEditSampleScenes';
+export { FilmPageEditScreenplayScore } from './FilmPageEditScreenplayScore';
+export { FilmPageEditAiAnalysis } from './FilmPageEditAiAnalysis';
 export { FilmPageEditSynopsisTab } from './FilmPageEditSynopsisTab';
 export { FilmPageEditCastingVote } from './FilmPageEditCastingVote';
 export { FilmPageEditProduction } from './FilmPageEditProduction';

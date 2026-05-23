@@ -106,9 +106,15 @@ export const STEP_3_SECTION = {
 
 export const STEP_3_CAST = {
   heading: 'Key Cast Members',
-  actorName: { label: 'Actor Name', placeholder: 'e.g. Emma Stone' },
-  actorEmail: { label: 'Verification Email', placeholder: 'actor@email.com' },
-  role: { label: 'Role', placeholder: '' },
+  subheading: 'Confirmed cast — signed or committed. Verification email is sent to each actor.',
+  actorName: { label: "Actor's Name", placeholder: 'e.g. Daniel Finch' },
+  character: { label: 'Character', placeholder: 'e.g. Leonard Mason' },
+  tier: { label: 'Cast Tier', placeholder: 'Select tier' },
+  actorEmail: { label: 'Email Confirmation', placeholder: 'actor@email.com' },
+  characterDescription: {
+    label: 'Character Description',
+    placeholder: 'Brief description for the film page (optional)',
+  },
   addButton: '+ Add Another Cast Member',
 } as const;
 
@@ -122,8 +128,20 @@ export const STEP_3_CREW = {
 
 export const STEP_3_WISHLIST = {
   heading: 'Wish List Cast (Optional)',
-  description: 'Let the community vote on their dream cast for your film',
-  placeholder: 'e.g., Emma Stone, Michael B. Jordan',
+  description:
+    'Dream cast options fans can vote on. When an actor is signed, mark them as Verified Cast — they will no longer appear in fan voting.',
+  actorName: { label: "Actor's Name", placeholder: 'e.g. Ben Barnes' },
+  character: { label: 'Character', placeholder: 'e.g. Marcus Cole' },
+  tier: { label: 'Cast Tier', placeholder: 'Select tier' },
+  characterDescription: {
+    label: 'Character Description',
+    placeholder: 'Brief description for the film page (optional)',
+  },
+  statusWishList: 'Wish List',
+  statusVerified: 'Verified Cast',
+  markVerified: 'Mark as Verified Cast',
+  markWishList: 'Move back to Wish List',
+  addButton: '+ Add Wish List Cast Member',
 } as const;
 
 // ——— Step 4: Budget & Timeline ———

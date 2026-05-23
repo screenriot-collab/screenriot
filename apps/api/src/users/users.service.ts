@@ -41,6 +41,7 @@ export class UsersService {
 
     return {
       profile: {
+        scriptCredits: user.scriptCredits,
         firstName: user.firstName,
         lastName: user.lastName,
         displayName: user.displayName,
@@ -91,6 +92,15 @@ export class UsersService {
           : { status: 'not_started', documents: [] },
       },
     };
+  }
+
+  async getScriptCredits(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { scriptCredits: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return { scriptCredits: user.scriptCredits };
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {

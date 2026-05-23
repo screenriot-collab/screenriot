@@ -6,10 +6,12 @@ interface FilmDetailMetricCardProps {
 
 export function FilmDetailMetricCard({ metric }: FilmDetailMetricCardProps) {
   return (
-    <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{metric.label}</p>
-      <p className="mt-1 text-lg font-semibold text-white">{metric.value}</p>
-      <p className="mt-1.5 text-sm leading-relaxed text-gray-400">{metric.description}</p>
+    <div className="rounded-lg border border-screenriot-accent-blue/30 bg-screenriot-accent-blue/15 p-4 backdrop-blur-sm">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium text-white/90">{metric.label}</p>
+        <p className="shrink-0 text-xl font-semibold text-white">{metric.value}</p>
+      </div>
+      <p className="mt-1 text-xs text-white/70">{metric.description}</p>
     </div>
   );
 }

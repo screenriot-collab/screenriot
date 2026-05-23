@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
 
 const jwtSecret = process.env.JWT_SECRET ?? 'development-secret-change-in-production';
 
@@ -17,7 +18,7 @@ const jwtSecret = process.env.JWT_SECRET ?? 'development-secret-change-in-produc
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RolesGuard],
-  exports: [AuthService, RolesGuard],
+  providers: [AuthService, JwtStrategy, RolesGuard, OptionalJwtAuthGuard],
+  exports: [AuthService, RolesGuard, OptionalJwtAuthGuard],
 })
 export class AuthModule {}

@@ -15,6 +15,10 @@ import FilmDetail from './pages/FilmDetail';
 import FilmPageEdit from './pages/FilmPageEdit';
 import FilmPages from './pages/FilmPages';
 import FilmsWithInvestments from './pages/FilmsWithInvestments';
+import ScriptCreditPurchases from './pages/ScriptCreditPurchases';
+import SubmissionFeePayments from './pages/SubmissionFeePayments';
+import CastingSuggestionsFilms from './pages/CastingSuggestionsFilms';
+import CastingSuggestionsFilm from './pages/CastingSuggestionsFilm';
 import Contributions from './pages/Contributions';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -48,6 +52,10 @@ export default function App() {
         <Route path="film-pages/:id" element={<FilmPageEdit />} />
         <Route path="contributions" element={<Contributions />} />
         <Route path="films-with-investments" element={<FilmsWithInvestments />} />
+        <Route path="script-credit-purchases" element={<ScriptCreditPurchases />} />
+        <Route path="submission-fee-payments" element={<SubmissionFeePayments />} />
+        <Route path="casting-suggestions" element={<CastingSuggestionsFilms />} />
+        <Route path="casting-suggestions/:filmId" element={<CastingSuggestionsFilm />} />
         <Route path="admins" element={<Admins />} />
         <Route path="mods" element={<Mods />} />
       </Route>

@@ -29,11 +29,53 @@ export type VotingCategory = {
   communityMax: number;
 };
 
-export type PledgeVotingMock = {
+/** Stored in pageContent as `pledgeVoting` (legacy key); UI is free fan voting — no payment. */
+export type ScreenplayScoreCategory = {
+  name: string;
+  aiScore: number;
+  expertScore: number;
+};
+
+export type ScreenplayScoreMock = {
+  aiOverall: number;
+  expertOverall: number;
+  categories: ScreenplayScoreCategory[];
+};
+
+export type FanVotingMock = {
   title?: string;
-  pledgeAmount: number;
   subtitle: string;
   categories: VotingCategory[];
+};
+
+export type CommunityReview = {
+  id: string;
+  authorName: string;
+  authorInitials: string;
+  rating: number;
+  reviewText: string | null;
+  createdAt: string;
+};
+
+/** @deprecated Use FanVotingMock */
+export type PledgeVotingMock = FanVotingMock;
+
+export type CommunityCommentMock = {
+  id: string;
+  author: string;
+  authorInitials: string;
+  content: string;
+  upvotes: number;
+  timestamp: string;
+  replies: CommunityCommentMock[];
+};
+
+export type CommunityDiscussionMock = {
+  title: string;
+  subtitle: string;
+  commentPlaceholder: string;
+  apiPendingNote: string;
+  comments: CommunityCommentMock[];
 };
 
 export type CharacterMock = {
@@ -49,13 +91,21 @@ export type TreatmentMock = {
   act2: string;
 };
 
+export type ScriptSamplePage = {
+  id: string;
+  title: string;
+  locked: boolean;
+  content?: string;
+};
+
 export type SampleScenesMock = {
   title: string;
-  unlockMessage: string;
-  pledgeAmount: number;
-  /** Content shown after unlock (paid). Plain text or markdown-style; frontend may render with line breaks. */
-  description?: string;
-  unlocked?: boolean;
+  emptyMessage: string;
+  pages: ScriptSamplePage[];
+  freePreviewCount: number;
+  creditsPerPage: number;
+  totalPages: number;
+  scriptCredits?: number;
 };
 
 export type RateStoryCategory = {
@@ -86,6 +136,8 @@ export type CastingVoteOption = {
   role: string;
   votePercent: number;
   votes: number;
+  status?: 'wish_list' | 'verified';
+  characterDescription?: string;
 };
 
 export type TabbedSectionCasting = {
@@ -144,7 +196,12 @@ export type FilmDetailMock = {
   slug: string;
   tags: string[];
   title: string;
+  /** Short hook under title (design); full synopsis lives in tab / phase-2 block. */
+  logline: string;
   synopsis: string;
+  genre?: string;
+  runtime?: string;
+  rating?: string;
   directorName: string;
   /** Director avatar image URL (filmmaker avatar). Shown left of "Directed by". */
   directorAvatarUrl?: string;
@@ -154,6 +211,10 @@ export type FilmDetailMock = {
   videoUrl?: string;
   videoLabel: string;
   videoRestrictedMessage: string;
+  hasAiMarketScore: boolean;
+  hasScreenplayScore: boolean;
+  screenplayScore: ScreenplayScoreMock;
+  hasCommunityScore: boolean;
   aiAnalysis: {
     overallScore: number;
     maxScore: number;
@@ -162,13 +223,15 @@ export type FilmDetailMock = {
     investmentMetrics: FilmDetailMetric[];
   };
   similarFilms: SimilarFilm[];
-  pledgeVoting: PledgeVotingMock;
+  fanVoting: FanVotingMock;
+  communityDiscussion: CommunityDiscussionMock;
   treatment: TreatmentMock;
   mainCharacters: CharacterMock[];
   sampleScenes: SampleScenesMock;
   rateStory: RateStoryMock;
   tabbedSection: TabbedSectionMock;
   sidebar: FilmDetailSidebarMock;
+  communityReviews: CommunityReview[];
 };
 
 const MARKET_INSIGHTS: FilmDetailMetric[] = [
@@ -209,10 +272,9 @@ const SIMILAR_FILMS: SimilarFilm[] = [
   { id: '3', title: 'Blade Runner 2049', boxOffice: '$259M', roi: '6.8x', rating: '88% Critical', matchPercent: 91 },
 ];
 
-const PLEDGE_VOTING: PledgeVotingMock = {
-  title: 'Pledge-Based Voting',
-  pledgeAmount: 25,
-  subtitle: '$25 pledge per category • Held in escrow • Converts to investment if your choice wins',
+const FAN_VOTING: FanVotingMock = {
+  title: 'Fan Voting',
+  subtitle: 'Rate this project and vote for your dream cast • Voting is free',
   categories: [
     {
       id: 'story',
@@ -293,12 +355,31 @@ const MAIN_CHARACTERS: CharacterMock[] = [
 ];
 
 const SAMPLE_SCENES: SampleScenesMock = {
-  title: 'Sample Scenes',
-  unlockMessage:
-    'Unlock sample scenes to get a deeper understanding of the script quality and dialogue.',
-  pledgeAmount: 50,
-  description: '',
-  unlocked: false,
+  title: 'Script Sample',
+  emptyMessage: 'Sample scenes will be published when the filmmaker adds them.',
+  pages: [],
+  freePreviewCount: 0,
+  creditsPerPage: 1,
+  totalPages: 0,
+};
+
+const COMMUNITY_DISCUSSION: CommunityDiscussionMock = {
+  title: 'Community Discussion',
+  subtitle: 'Join the conversation — share thoughts and reply to other fans.',
+  commentPlaceholder: 'Share your thoughts about this project…',
+  apiPendingNote: '',
+  comments: [
+    {
+      id: '1',
+      author: 'FilmFan2024',
+      authorInitials: 'FF',
+      content:
+        'The memory-market concept feels fresh — excited to see how Elena’s arc plays out on screen.',
+      upvotes: 47,
+      timestamp: '2 hours ago',
+      replies: [],
+    },
+  ],
 };
 
 const RATE_STORY: RateStoryMock = {
@@ -329,7 +410,7 @@ A gripping sci-fi thriller that explores identity, power, and what it means to b
 const TABBED_CASTING: TabbedSectionCasting = {
   title: 'Vote for Your Dream Cast',
   subtitle: 'Help us choose the perfect actors for this film. Your votes influence casting decisions.',
-  tip: 'Tip: Casting decisions are influenced by community votes. The more you invest, the more weight your vote carries.',
+  tip: 'Tip: Casting decisions are influenced by community votes. Investing is separate — use the sidebar when you are ready.',
   cast: [
     { id: '1', name: 'Emma Stone', role: 'Lead Role - Sarah', votePercent: 82, votes: 342 },
     { id: '2', name: 'Michael B. Jordan', role: 'Lead Role - Marcus', votePercent: 72, votes: 289 },
@@ -400,11 +481,20 @@ export function getFilmDetailMock(slug: string): FilmDetailMock {
     slug,
     tags: ['Sci Fi Thriller', 'PG 13', '118 min'],
     title: 'Memory Market',
-    synopsis:
+    logline:
       'A memory trader uncovers a conspiracy threatening human consciousness in a world where memories are commodities.',
+    synopsis:
+      'In a world where memories can be bought and sold, a young memory trader discovers a conspiracy that could erase the very fabric of human consciousness.',
+    genre: 'Sci-Fi Thriller',
+    runtime: '118 min',
+    rating: 'PG-13',
     directorName: 'Sarah Chen',
     videoLabel: 'Official Trailer',
     videoRestrictedMessage: 'This video has restricted access.',
+    hasAiMarketScore: true,
+    hasScreenplayScore: false,
+    screenplayScore: { aiOverall: 0, expertOverall: 0, categories: [] },
+    hasCommunityScore: true,
     aiAnalysis: {
       overallScore: 87,
       maxScore: 100,
@@ -413,12 +503,14 @@ export function getFilmDetailMock(slug: string): FilmDetailMock {
       investmentMetrics: INVESTMENT_METRICS,
     },
     similarFilms: SIMILAR_FILMS,
-    pledgeVoting: PLEDGE_VOTING,
+    fanVoting: FAN_VOTING,
+    communityDiscussion: COMMUNITY_DISCUSSION,
     treatment: TREATMENT,
     mainCharacters: MAIN_CHARACTERS,
     sampleScenes: SAMPLE_SCENES,
     rateStory: RATE_STORY,
     tabbedSection: TABBED_SECTION,
     sidebar: SIDEBAR,
+    communityReviews: [],
   };
 }

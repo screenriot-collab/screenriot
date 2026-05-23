@@ -300,6 +300,103 @@ export async function getFilmDonations(filmId: string): Promise<FilmDonationRow[
   return api<FilmDonationRow[]>(`/admin/reports/investments/${filmId}/donations`);
 }
 
+export async function fulfillDonationFromStripe(sessionId: string): Promise<{
+  created: boolean;
+  donationId: string;
+  filmId: string;
+  filmTitle: string;
+  amount: number;
+  userEmail: string | null;
+}> {
+  return api('/admin/reports/investments/fulfill', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
+  });
+}
+
+// --- Script credit purchases ---
+
+export interface ScriptCreditPurchaseRow {
+  id: string;
+  userId: string;
+  userEmail: string;
+  credits: number;
+  stripeSessionId: string;
+  createdAt: string;
+  amountUsd: number;
+}
+
+export async function getScriptCreditPurchases(params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ purchases: ScriptCreditPurchaseRow[]; total: number }> {
+  const q = new URLSearchParams();
+  if (params?.search) q.set('search', params.search);
+  if (params?.page) q.set('page', String(params.page));
+  if (params?.limit) q.set('limit', String(params.limit));
+  const suffix = q.toString() ? `?${q.toString()}` : '';
+  return api<{ purchases: ScriptCreditPurchaseRow[]; total: number }>(
+    `/admin/script-credit-purchases${suffix}`,
+  );
+}
+
+export async function fulfillScriptCreditsFromSession(sessionId: string): Promise<{
+  credited: boolean;
+  creditsAdded: number;
+  scriptCredits: number;
+  userEmail: string | null;
+  stripeSessionId: string;
+}> {
+  return api('/admin/script-credit-purchases/fulfill', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
+  });
+}
+
+// --- Submission fee payments ---
+
+export interface SubmissionFeePaymentRow {
+  id: string;
+  filmId: string;
+  filmTitle: string;
+  userId: string;
+  userEmail: string;
+  stripeSessionId: string;
+  createdAt: string;
+  amountUsd: number;
+}
+
+export async function getSubmissionFeePayments(params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ payments: SubmissionFeePaymentRow[]; total: number }> {
+  const q = new URLSearchParams();
+  if (params?.search) q.set('search', params.search);
+  if (params?.page) q.set('page', String(params.page));
+  if (params?.limit) q.set('limit', String(params.limit));
+  const suffix = q.toString() ? `?${q.toString()}` : '';
+  return api<{ payments: SubmissionFeePaymentRow[]; total: number }>(
+    `/admin/submission-fee-payments${suffix}`,
+  );
+}
+
+export async function fulfillSubmissionFeeFromSession(sessionId: string): Promise<{
+  applied: boolean;
+  filmId: string;
+  filmTitle: string;
+  userId: string;
+  userEmail: string | null;
+  stripeSessionId: string;
+  amountUsd: number;
+}> {
+  return api('/admin/submission-fee-payments/fulfill', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
+  });
+}
+
 // --- Contributions ---
 import type { ContributionsListResponse } from '@/types/contributions';
 
@@ -328,6 +425,83 @@ export async function rejectContribution(id: string, adminComment: string): Prom
   return api<{ ok: boolean }>(`/admin/contributions/${id}/reject`, {
     method: 'PATCH',
     body: JSON.stringify({ adminComment }),
+  });
+}
+
+// --- Casting suggestions ---
+
+export type CastingSuggestionStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected';
+
+export interface CastingSuggestionRow {
+  id: string;
+  filmId: string;
+  filmTitle: string;
+  filmSlug: string;
+  userId: string;
+  userEmail: string;
+  actorName: string;
+  roleHint: string | null;
+  status: CastingSuggestionStatus;
+  adminNote: string | null;
+  createdAt: string;
+}
+
+export interface CastingSuggestionFilmSummary {
+  filmId: string;
+  filmTitle: string;
+  filmSlug: string;
+  total: number;
+  pending: number;
+  lastSubmittedAt: string;
+}
+
+export async function getCastingSuggestionFilms(params?: {
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ films: CastingSuggestionFilmSummary[]; total: number }> {
+  const q = new URLSearchParams();
+  if (params?.status) q.set('status', params.status);
+  if (params?.search) q.set('search', params.search);
+  if (params?.page) q.set('page', String(params.page));
+  if (params?.limit) q.set('limit', String(params.limit));
+  const suffix = q.toString() ? `?${q.toString()}` : '';
+  return api<{ films: CastingSuggestionFilmSummary[]; total: number }>(
+    `/admin/casting-suggestions/films${suffix}`,
+  );
+}
+
+export async function getCastingSuggestions(params: {
+  filmId: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ suggestions: CastingSuggestionRow[]; total: number }> {
+  const q = new URLSearchParams();
+  q.set('filmId', params.filmId);
+  if (params.status) q.set('status', params.status);
+  if (params.page) q.set('page', String(params.page));
+  if (params.limit) q.set('limit', String(params.limit));
+  return api<{ suggestions: CastingSuggestionRow[]; total: number }>(
+    `/admin/casting-suggestions?${q.toString()}`,
+  );
+}
+
+export interface UpdateCastingSuggestionPayload {
+  status: CastingSuggestionStatus;
+  adminNote?: string;
+  actorName?: string;
+  roleHint?: string;
+}
+
+export async function updateCastingSuggestion(
+  id: string,
+  payload: UpdateCastingSuggestionPayload,
+): Promise<{ ok: boolean; publishedToCast: boolean }> {
+  return api<{ ok: boolean; publishedToCast: boolean }>(`/admin/casting-suggestions/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
   });
 }
 

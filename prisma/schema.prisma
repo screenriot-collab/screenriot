@@ -47,8 +47,41 @@ model User {
   castingVotes          FilmCastingVote[]
   pledgeVotes           FilmPledgeVote[]
   contributions         FilmContribution[]
+  scriptCredits         Int                  @default(0) @map("script_credits")
+  scriptUnlocks         FilmScriptUnlock[]
+  scriptCreditPurchases ScriptCreditPurchase[]
+  submissionFeePayments SubmissionFeePayment[]
+  castingSuggestions    FilmCastingSuggestion[]
+  discussionComments    FilmDiscussionComment[]
+  discussionUpvotes     FilmDiscussionUpvote[]
 
   @@map("users")
+}
+
+model ScriptCreditPurchase {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  stripeSessionId String   @unique @map("stripe_session_id")
+  credits         Int
+  createdAt       DateTime @default(now()) @map("created_at")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("script_credit_purchases")
+}
+
+model SubmissionFeePayment {
+  id              String   @id @default(cuid())
+  filmId          String   @unique @map("film_id")
+  userId          String   @map("user_id")
+  stripeSessionId String   @unique @map("stripe_session_id")
+  amountUsd       Decimal  @map("amount_usd") @db.Decimal(10, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+  film            Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("submission_fee_payments")
 }
 
 model FilmmakerProfile {
@@ -172,6 +205,10 @@ model Film {
   castingVotes      FilmCastingVote[]
   pledgeVotes       FilmPledgeVote[]
   contributions     FilmContribution[]
+  scriptUnlocks     FilmScriptUnlock[]
+  castingSuggestions FilmCastingSuggestion[]
+  discussionComments FilmDiscussionComment[]
+  submissionFeePayment SubmissionFeePayment?
 
   @@index([filmmakerId])
   @@index([lastReviewedById])
@@ -207,18 +244,35 @@ model FilmCastingVote {
   film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([filmId, userId])
+  @@unique([filmId, userId, optionId])
   @@index([filmId])
   @@index([userId])
   @@map("film_casting_votes")
 }
 
-model FilmPledgeVote {
+model FilmScriptUnlock {
   id        String   @id @default(cuid())
   filmId    String   @map("film_id")
   userId    String   @map("user_id")
-  scores    Json     @map("scores")
+  pageId    String   @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
+
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([filmId, userId, pageId])
+  @@index([filmId])
+  @@index([userId])
+  @@map("film_script_unlocks")
+}
+
+model FilmPledgeVote {
+  id         String   @id @default(cuid())
+  filmId     String   @map("film_id")
+  userId     String   @map("user_id")
+  scores     Json     @map("scores")
+  reviewText String?  @map("review_text")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -227,6 +281,73 @@ model FilmPledgeVote {
   @@index([filmId])
   @@index([userId])
   @@map("film_pledge_votes")
+}
+
+enum CastingSuggestionStatus {
+  pending
+  reviewed
+  accepted
+  rejected
+}
+
+model FilmDiscussionComment {
+  id          String    @id @default(cuid())
+  filmId      String    @map("film_id")
+  userId      String    @map("user_id")
+  parentId    String?   @map("parent_id")
+  rootId      String    @map("root_id")
+  body        String
+  upvoteCount Int       @default(0) @map("upvote_count")
+  replyCount  Int       @default(0) @map("reply_count")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  film    Film                     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  user    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  FilmDiscussionComment?   @relation("DiscussionReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies FilmDiscussionComment[]    @relation("DiscussionReplies")
+  upvotes FilmDiscussionUpvote[]
+
+  @@index([filmId])
+  @@index([filmId, parentId])
+  @@index([rootId])
+  @@index([rootId, createdAt])
+  @@map("film_discussion_comments")
+}
+
+model FilmDiscussionUpvote {
+  id        String   @id @default(cuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment FilmDiscussionComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([userId])
+  @@map("film_discussion_upvotes")
+}
+
+model FilmCastingSuggestion {
+  id        String                  @id @default(cuid())
+  filmId    String                  @map("film_id")
+  userId    String                  @map("user_id")
+  actorName String                  @map("actor_name")
+  roleHint  String?                 @map("role_hint")
+  status    CastingSuggestionStatus @default(pending)
+  adminNote String?                 @map("admin_note")
+  createdAt DateTime                @default(now()) @map("created_at")
+  updatedAt DateTime                @updatedAt @map("updated_at")
+
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([filmId])
+  @@index([userId])
+  @@index([status])
+  @@map("film_casting_suggestions")
 }
 
 model Payout {

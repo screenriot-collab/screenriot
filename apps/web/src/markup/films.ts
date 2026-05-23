@@ -76,11 +76,7 @@ export interface ProjectFormDataFromApi {
     posterFileName?: string;
     videoFileName?: string;
   };
-  step3?: {
-    cast: { actorName: string; actorEmail: string; role: string }[];
-    crew: { name: string; position: string; email: string }[];
-    wishListCast: string;
-  };
+  step3?: import('@/types/submit-project').SubmitProjectFormData['step3'];
   step4?: {
     totalBudget: string;
     breakdown: { id: string; label: string; percent: number }[];

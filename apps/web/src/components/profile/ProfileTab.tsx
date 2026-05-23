@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { IMAGES } from '@/lib/constants';
@@ -8,6 +9,7 @@ import {
   PROFILE_COUNTRIES,
   PLACEHOLDER_BADGES,
   type ProfileData,
+  type VerificationStatus,
 } from '@/markup/profile';
 import { updateProfile, uploadAvatar, getProfile, resendVerificationEmail } from '@/lib/profile-api';
 
@@ -26,6 +28,46 @@ interface ProfileTabProps {
 const AVATAR_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
 
+function IdentityLockNotice({ status }: { status: VerificationStatus }) {
+  if (status === 'verified') {
+    return (
+      <div
+        className="mt-2 rounded-md border border-green-500/20 bg-green-500/5 px-3 py-2"
+        role="status"
+      >
+        <p className="text-xs text-green-300">
+          Your identity is verified. Legal name, phone, and date of birth are locked to match
+          your verified documents. Contact an administrator if you need changes. Details are in
+          the{' '}
+          <Link
+            href="/profile?tab=security"
+            className="font-medium text-screenriot-accent underline underline-offset-2 hover:text-screenriot-accent/90"
+          >
+            Security
+          </Link>{' '}
+          tab.
+        </p>
+      </div>
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <div
+        className="mt-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2"
+        role="status"
+      >
+        <p className="text-xs text-amber-300">
+          Identity fields are locked while your documents are under review. Only an administrator
+          can change them after verification is complete.
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export function ProfileTab({ initialProfile }: ProfileTabProps) {
   const { data: session } = useSession();
   const [profile, setProfile] = useState<ProfileData>(initialProfile);
@@ -38,6 +80,7 @@ export function ProfileTab({ initialProfile }: ProfileTabProps) {
 
   const isFilmmaker = profile.role === 'filmmaker';
   const identityLocked = profile.identityLocked ?? false;
+  const verificationStatus = profile.verification?.status ?? 'not_started';
   const emailVerified = !!profile.emailVerifiedAt;
 
   function update<K extends keyof ProfileData>(field: K, value: ProfileData[K]) {
@@ -217,14 +260,7 @@ export function ProfileTab({ initialProfile }: ProfileTabProps) {
           <p className="mt-1 text-xs text-screenriot-muted">
             Basic details about you. Your name and avatar are visible to other community members.
           </p>
-          {identityLocked && (
-            <div className="mt-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2">
-              <p className="text-xs text-amber-300">
-                Identity fields are locked because your account is verified or under review.
-                Only an administrator can change these fields.
-              </p>
-            </div>
-          )}
+          {identityLocked && <IdentityLockNotice status={verificationStatus} />}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="first-name" className={LABEL_CLASS}>First Name</label>
