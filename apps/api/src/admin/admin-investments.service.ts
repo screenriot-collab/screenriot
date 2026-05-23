@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FilmStatus } from '.prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { DonationsService } from '../donations/donations.service';
 
 export interface FilmWithInvestmentsDto {
   filmId: string;
@@ -23,7 +24,14 @@ export interface DonationRowDto {
 
 @Injectable()
 export class AdminInvestmentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly donations: DonationsService,
+  ) {}
+
+  fulfillFromStripe(stripeId: string) {
+    return this.donations.fulfillDonationAsAdmin(stripeId);
+  }
 
   async getFilmsWithInvestments(params?: {
     status?: string;

@@ -29,6 +29,11 @@ export class UsersController {
     return this.usersService.getProfile(userId);
   }
 
+  @Get('me/script-credits')
+  getScriptCredits(@CurrentUser('id') userId: string) {
+    return this.usersService.getScriptCredits(userId);
+  }
+
   @Patch('me')
   updateProfile(
     @CurrentUser('id') userId: string,

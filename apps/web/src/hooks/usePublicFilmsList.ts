@@ -9,6 +9,11 @@ import type { PlaceholderFilm } from '@/markup/home';
 export type PublicFilmCardView = PlaceholderFilm & {
   slug?: string;
   posterUrl?: string;
+  aiMarketScore?: number;
+  predictedROI?: string;
+  hasCommunityScore: boolean;
+  hasAiMarketScore: boolean;
+  hasPredictedRoi: boolean;
 };
 
 type UsePublicFilmsListOptions = {

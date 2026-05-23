@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { getServerSession } from 'next-auth';
 import { IMAGES } from '@/lib/constants';
 import { authOptions } from '@/lib/auth';
+import { getVerification } from '@/lib/profile-api';
 import { SignOutButton } from '@/components/SignOutButton';
 
 export async function Header() {
@@ -11,6 +12,17 @@ export async function Header() {
     session = await getServerSession(authOptions);
   } catch {
     // Invalid session cookie — treat as unauthenticated
+  }
+
+  const isFilmmaker = session?.user?.role === 'filmmaker';
+  let showFilmmakerNav = isFilmmaker;
+  if (isFilmmaker && session?.accessToken) {
+    try {
+      const verification = await getVerification(session.accessToken);
+      showFilmmakerNav = verification.status === 'verified';
+    } catch {
+      showFilmmakerNav = false;
+    }
   }
 
   return (
@@ -48,6 +60,14 @@ export async function Header() {
           </Link>
           {session ? (
             <>
+              {showFilmmakerNav && (
+                <Link
+                  href="/dashboard/films"
+                  className="text-sm font-medium text-gray-300 hover:text-white rounded focus:outline-none"
+                >
+                  My Films
+                </Link>
+              )}
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-screenriot-accent hover:text-screenriot-accent/90 rounded focus:outline-none"
@@ -73,7 +93,7 @@ export async function Header() {
               </Link>
               <Link
                 href="/register"
-                className="rounded bg-screenriot-accent px-3 py-1.5 text-sm font-medium text-screenriot-bg hover:bg-screenriot-accent/90 focus:outline-none"
+                className="rounded bg-screenriot-accent-blue px-3 py-1.5 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none"
                 role="button"
                 aria-label="Register"
               >

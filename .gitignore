@@ -25,3 +25,6 @@ Thumbs.db
 
 # Local docs (not for GitHub)
 docs/
+
+# Local debug / accidental root artifacts
+tmp-*.json

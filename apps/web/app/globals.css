@@ -8,16 +8,19 @@
   }
 }
 
-/* Pledge voting range slider: transparent track so custom fill div shows */
+/* Fan voting range slider: transparent track so custom fill div shows */
+.fan-vote-slider,
 .pledge-slider {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
 }
+.fan-vote-slider::-webkit-slider-runnable-track,
 .pledge-slider::-webkit-slider-runnable-track {
   background: transparent;
   border: none;
 }
+.fan-vote-slider::-moz-range-track,
 .pledge-slider::-moz-range-track {
   background: transparent;
   border: none;
@@ -27,16 +30,17 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: rgb(59 130 246);
+  background: #2563eb;
   cursor: pointer;
   border: 2px solid rgb(15 23 42);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
+.fan-vote-slider::-moz-range-thumb,
 .pledge-slider::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: rgb(59 130 246);
+  background: #2563eb;
   cursor: pointer;
   border: 2px solid rgb(15 23 42);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);

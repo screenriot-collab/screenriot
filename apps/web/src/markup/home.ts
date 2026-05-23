@@ -147,21 +147,21 @@ export const HOW_IT_WORKS = {
       icon: 'search',
       title: 'Discover & Vote',
       description:
-        'Browse film projects and vote on story uniqueness, script brilliance and dream casting.',
+        'Browse film projects and vote on story uniqueness, script brilliance, and dream casting.',
     },
     {
-      icon: 'folder',
+      icon: 'clapperboard',
       title: 'Invest in Films',
       description:
         'Choose your investment tier and become part of the production with tokenized ownership.',
     },
     {
-      icon: 'plus',
+      icon: 'chart',
       title: 'Earn Returns',
       description:
         'Earn revenue share from distribution, streaming rights, and box office success.',
     },
   ],
   ctaLabel: 'View Platform Architecture',
-  ctaHref: '/#architecture',
+  ctaHref: '/how-it-works',
 } as const;

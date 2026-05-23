@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { IMAGES } from '@/lib/constants';
 import {
   PREFERENCES_GENRES,
@@ -27,6 +28,17 @@ const TABS = [
   { id: 'security', label: 'Security' },
 ] as const;
 
+type TabId = (typeof TABS)[number]['id'];
+
+const DEFAULT_TAB: TabId = 'profile';
+
+function parseTabId(value: string | null | undefined): TabId {
+  if (value && TABS.some((t) => t.id === value)) {
+    return value as TabId;
+  }
+  return DEFAULT_TAB;
+}
+
 const CLASS_BUTTON_SECONDARY =
   'rounded bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20 focus:outline-none';
 
@@ -42,11 +54,28 @@ export function ProfileView({
   initialTab,
 }: {
   profileData: ProfileData;
-  initialTab?: (typeof TABS)[number]['id'];
+  initialTab?: TabId;
 }) {
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]['id']>(
-    initialTab && TABS.some((t) => t.id === initialTab) ? initialTab : 'profile',
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = parseTabId(searchParams?.get('tab') ?? initialTab);
+
+  const selectTab = useCallback(
+    (tab: TabId) => {
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+      if (tab === DEFAULT_TAB) {
+        params.delete('tab');
+      } else {
+        params.set('tab', tab);
+      }
+      const query = params.toString();
+      const path = pathname ?? '/profile';
+      router.push(query ? `${path}?${query}` : path, { scroll: false });
+    },
+    [pathname, router, searchParams],
   );
+
   const [notifications, setNotifications] =
     useState<Record<string, boolean>>(initialNotifications);
 
@@ -67,7 +96,7 @@ export function ProfileView({
               aria-selected={activeTab === tab.id}
               aria-controls={`panel-${tab.id}`}
               id={`tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => selectTab(tab.id)}
               className={`rounded-t px-4 py-3 text-sm font-medium focus:outline-none ${
                 activeTab === tab.id
                   ? 'border-b-2 border-screenriot-accent-blue bg-screenriot-bg-card text-white'

@@ -16,30 +16,90 @@ import type {
   PledgeVotingForm,
   PledgeVotingCategoryForm,
   InvestmentTierForm,
+  ScreenplayScoreForm,
+  AiAnalysisForm,
+  MetricForm,
+  SimilarFilmForm,
 } from '@/types/films';
 
 export function canEditPage(status: string): boolean {
   return EDITABLE_PAGE_STATUSES.includes(status);
 }
 
-export function parseWishListCastToOptions(
-  wishListCast: string | undefined | null,
-): CastingVoteOptionForm[] {
-  if (!wishListCast) return [];
-  const items = wishListCast
-    .split(/[,;\n]/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  return items.map((name, index) => ({
-    id: `wish-${index}`,
-    name,
-    role: '',
-    votePercent: 0,
-    votes: 0,
-  }));
+function mapMetrics(arr: unknown): MetricForm[] {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((m, i) => {
+    const row = m as Record<string, unknown>;
+    return {
+      id: typeof row.id === 'string' ? row.id : `metric-${i}`,
+      label: typeof row.label === 'string' ? row.label : '',
+      value: typeof row.value === 'string' ? row.value : String(row.value ?? ''),
+      description: typeof row.description === 'string' ? row.description : '',
+    };
+  });
 }
 
-type Step3CastRow = { actorName?: string; actorEmail?: string; role?: string };
+const TIER_LABELS: Record<string, string> = {
+  lead: 'Lead',
+  co_lead: 'Co-Lead',
+  supporting: 'Supporting Role',
+  background: 'Background Actor',
+};
+
+function roleLine(character: string, tier: string): string {
+  const tierLabel = TIER_LABELS[tier] ?? tier;
+  if (character && tierLabel) return `${character} · ${tierLabel}`;
+  return character || tierLabel || '';
+}
+
+export function parseWishListCastToOptions(wishListRaw: unknown): CastingVoteOptionForm[] {
+  if (!wishListRaw) return [];
+
+  let rows: {
+    actorName?: string;
+    character?: string;
+    role?: string;
+    tier?: string;
+    characterDescription?: string;
+    status?: string;
+  }[] = [];
+
+  if (Array.isArray(wishListRaw)) {
+    rows = wishListRaw;
+  } else if (typeof wishListRaw === 'string' && wishListRaw.trim()) {
+    rows = wishListRaw
+      .split(/[,;\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((name) => ({ actorName: name }));
+  }
+
+  return rows
+    .filter((row) => (row.actorName ?? '').trim())
+    .map((row, index) => {
+      const character = (row.character ?? row.role ?? '').trim();
+      const tier = (row.tier ?? 'lead').trim();
+      const status = row.status === 'verified' ? 'verified' : 'wish_list';
+      return {
+        id: `wish-${index}`,
+        name: (row.actorName ?? '').trim(),
+        role: roleLine(character, tier),
+        status,
+        characterDescription: (row.characterDescription ?? '').trim(),
+        votePercent: 0,
+        votes: 0,
+      };
+    });
+}
+
+type Step3CastRow = {
+  actorName?: string;
+  actorEmail?: string;
+  role?: string;
+  character?: string;
+  tier?: string;
+  characterDescription?: string;
+};
 
 function mainCharactersFromDetail(
   pcMain: MainCharacterForm[] | undefined,
@@ -58,19 +118,15 @@ function mainCharactersFromDetail(
   return step3Cast.map((row: Step3CastRow, i: number) => {
     const actorName = (row.actorName ?? '').trim();
     const actorEmail = (row.actorEmail ?? '').trim();
-    const role = (row.role ?? '').trim();
-    const emailHasAt = /@/.test(actorEmail);
-    const roleLooksLikeName = role && !/@/.test(role);
+    const character = (row.character ?? row.role ?? '').trim();
+    const tier = (row.tier ?? 'lead').trim();
     const name =
-      actorName ||
-      (emailHasAt ? (roleLooksLikeName ? role : '—') : actorEmail) ||
-      '—';
-    const roleVal = emailHasAt && roleLooksLikeName ? '—' : role || '—';
+      actorName || (/@/.test(actorEmail) ? '—' : actorEmail || '—');
     return {
       id: `cast-${i}`,
       name,
-      role: roleVal,
-      description: '',
+      role: roleLine(character, tier),
+      description: (row.characterDescription ?? '').trim(),
       imageUrl: null,
       actorEmail: actorEmail || undefined,
     };
@@ -102,13 +158,12 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
     (row: Step3CastRow) =>
       (row.actorName ?? '').trim() ||
       (row.actorEmail ?? '').trim() ||
-      (row.role ?? '').trim(),
+      (row.character ?? row.role ?? '').trim(),
   );
   const mainCharacters = mainCharactersFromDetail(pcMain, step3Cast);
 
   const existingCasting = tabSection?.castingVote as CastingVoteForm | undefined;
-  const wishListCast = (f.step3?.wishListCast ?? '').trim();
-  const castingFromWishList = parseWishListCastToOptions(wishListCast);
+  const castingFromWishList = parseWishListCastToOptions(f.step3?.wishListCast);
   const castingVote: CastingVoteForm = {
     title: existingCasting?.title ?? 'Vote for Your Dream Cast',
     subtitle: existingCasting?.subtitle ?? '',
@@ -121,6 +176,8 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
             id: c.id ?? `cast-${index}`,
             name: c.name ?? '',
             role: c.role ?? '',
+            status: c.status === 'verified' ? 'verified' : 'wish_list',
+            characterDescription: c.characterDescription ?? '',
             votePercent:
               typeof c.votePercent === 'number' && !Number.isNaN(c.votePercent)
                 ? c.votePercent
@@ -165,23 +222,78 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
     : [];
 
   const existingSampleScenes = pc.sampleScenes as SampleScenesForm | undefined;
+  const pagesFromPc = Array.isArray(existingSampleScenes?.pages)
+    ? existingSampleScenes.pages.map((p, i) => ({
+        id: p.id ?? `page-${i + 1}`,
+        title: p.title ?? `Scene ${i + 1}`,
+        content: p.content ?? '',
+      }))
+    : existingSampleScenes?.description?.trim()
+      ? [{ title: 'Scene 1', content: existingSampleScenes.description }]
+      : [{ title: 'Scene 1', content: '' }];
   const sampleScenes: SampleScenesForm = existingSampleScenes
     ? {
-        title: existingSampleScenes.title ?? 'Sample Scenes',
+        title: existingSampleScenes.title ?? 'Script Sample',
         unlockMessage: existingSampleScenes.unlockMessage ?? '',
-        pledgeAmount:
-          typeof existingSampleScenes.pledgeAmount === 'number'
-            ? existingSampleScenes.pledgeAmount
-            : 50,
+        pledgeAmount: 0,
         description: existingSampleScenes.description ?? '',
+        pages: pagesFromPc,
+        unlockedPageCount:
+          typeof existingSampleScenes.unlockedPageCount === 'number'
+            ? existingSampleScenes.unlockedPageCount
+            : pagesFromPc.length,
+        lockedPageCount:
+          typeof existingSampleScenes.lockedPageCount === 'number'
+            ? existingSampleScenes.lockedPageCount
+            : 0,
+        creditsPerPage:
+          typeof existingSampleScenes.creditsPerPage === 'number'
+            ? existingSampleScenes.creditsPerPage
+            : 1,
       }
     : {
-        title: 'Sample Scenes',
-        unlockMessage:
-          'Unlock sample scenes to get a deeper understanding of the script quality and dialogue.',
-        pledgeAmount: 50,
+        title: 'Script Sample',
+        unlockMessage: 'Sample scenes will be published when the filmmaker adds them.',
+        pledgeAmount: 0,
         description: '',
+        pages: [{ id: 'page-1', title: 'Scene 1', content: '' }],
+        unlockedPageCount: 1,
+        lockedPageCount: 0,
+        creditsPerPage: 1,
       };
+
+  const rawScreenplay = pc.screenplayScore as ScreenplayScoreForm | undefined;
+  const screenplayScore: ScreenplayScoreForm = {
+    aiOverall: typeof rawScreenplay?.aiOverall === 'number' ? rawScreenplay.aiOverall : 0,
+    expertOverall:
+      typeof rawScreenplay?.expertOverall === 'number' ? rawScreenplay.expertOverall : 0,
+    categories: Array.isArray(rawScreenplay?.categories)
+      ? rawScreenplay.categories.map((c) => ({
+          name: c.name ?? '',
+          aiScore: typeof c.aiScore === 'number' ? c.aiScore : 0,
+          expertScore: typeof c.expertScore === 'number' ? c.expertScore : 0,
+        }))
+      : [],
+  };
+
+  const rawAi = pc.aiAnalysis as Record<string, unknown> | undefined;
+  const aiAnalysis: AiAnalysisForm = {
+    overallScore: typeof rawAi?.overallScore === 'number' ? rawAi.overallScore : 0,
+    marketInsights: mapMetrics(rawAi?.marketInsights),
+    teamTalent: mapMetrics(rawAi?.teamTalent),
+    investmentMetrics: mapMetrics(rawAi?.investmentMetrics),
+  };
+
+  const similarFilms: SimilarFilmForm[] = Array.isArray(pc.similarFilms)
+    ? (pc.similarFilms as SimilarFilmForm[]).map((s, i) => ({
+        id: s.id ?? `similar-${i}`,
+        title: s.title ?? '',
+        boxOffice: s.boxOffice ?? '',
+        roi: s.roi ?? '',
+        rating: s.rating ?? '',
+        matchPercent: typeof s.matchPercent === 'number' ? s.matchPercent : 0,
+      }))
+    : [];
 
   const sidebar = (pc.sidebar as { tiers?: unknown[] } | undefined) ?? {};
   const sidebarTiers: InvestmentTierForm[] = Array.isArray(sidebar.tiers)
@@ -201,12 +313,12 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
   const pledgeVoting: PledgeVotingForm =
     existingPledge?.categories && existingPledge.categories.length > 0
       ? {
-          title: existingPledge.title ?? 'Pledge-Based Voting',
-          subtitle: existingPledge.subtitle ?? '',
-          pledgeAmount:
-            typeof existingPledge.pledgeAmount === 'number'
-              ? existingPledge.pledgeAmount
-              : 25,
+          title: existingPledge.title ?? 'Fan Voting',
+          subtitle:
+            existingPledge.subtitle?.includes('$') || !existingPledge.subtitle?.trim()
+              ? 'Rate this project and vote for your dream cast • Voting is free'
+              : existingPledge.subtitle,
+          pledgeAmount: 0,
           categories: existingPledge.categories.map((c, i) => ({
             id: c.id ?? DEFAULT_PLEDGE_VOTING_CATEGORIES[i]?.id ?? `cat-${i}`,
             label: c.label ?? '',
@@ -223,10 +335,9 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
           })),
         }
       : {
-          title: 'Pledge-Based Voting',
-          subtitle:
-            '$25 pledge per category • Held in escrow • Converts to investment if your choice wins',
-          pledgeAmount: 25,
+          title: 'Fan Voting',
+          subtitle: 'Rate this project and vote for your dream cast • Voting is free',
+          pledgeAmount: 0,
           categories: DEFAULT_PLEDGE_VOTING_CATEGORIES.map((c) => ({ ...c })),
         };
 
@@ -255,6 +366,9 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
     productionStages,
     updatesItems,
     sampleScenes,
+    screenplayScore,
+    aiAnalysis,
+    similarFilms,
     pledgeVoting,
     sidebarTiers,
   };
@@ -281,9 +395,9 @@ export function buildFilmPageUpdatePayload(
     .pledgeVoting as PledgeVotingForm | undefined;
 
   const defaultPledge = {
-    title: 'Pledge-Based Voting',
-    subtitle: '',
-    pledgeAmount: 25,
+    title: 'Fan Voting',
+    subtitle: 'Rate this project and vote for your dream cast • Voting is free',
+    pledgeAmount: 0,
     categories: DEFAULT_PLEDGE_VOTING_CATEGORIES.map((c) => ({
       id: c.id,
       label: c.label,
@@ -344,20 +458,32 @@ export function buildFilmPageUpdatePayload(
         form.sampleScenes?.unlockMessage ??
         sampleScenesExisting?.unlockMessage ??
         '',
-      pledgeAmount:
-        form.sampleScenes?.pledgeAmount ??
-        sampleScenesExisting?.pledgeAmount ??
-        50,
+      pledgeAmount: 0,
       description:
         form.sampleScenes?.description ??
         sampleScenesExisting?.description ??
         '',
+      pages: (form.sampleScenes?.pages ?? sampleScenesExisting?.pages ?? []).map((p, i) => ({
+        id: p.id ?? `page-${i + 1}`,
+        title: p.title ?? `Scene ${i + 1}`,
+        content: p.content ?? '',
+      })),
+      unlockedPageCount:
+        form.sampleScenes?.unlockedPageCount ??
+        sampleScenesExisting?.unlockedPageCount ??
+        0,
+      lockedPageCount:
+        form.sampleScenes?.lockedPageCount ?? sampleScenesExisting?.lockedPageCount ?? 0,
+      creditsPerPage: form.sampleScenes?.creditsPerPage ?? sampleScenesExisting?.creditsPerPage ?? 1,
     },
+    screenplayScore: form.screenplayScore ?? (existing.screenplayScore as ScreenplayScoreForm),
+    aiAnalysis: form.aiAnalysis ?? (existing.aiAnalysis as AiAnalysisForm),
+    similarFilms: form.similarFilms ?? (existing.similarFilms as SimilarFilmForm[]) ?? [],
     pledgeVoting: form.pledgeVoting
       ? {
           title: form.pledgeVoting.title,
           subtitle: form.pledgeVoting.subtitle,
-          pledgeAmount: form.pledgeVoting.pledgeAmount,
+          pledgeAmount: 0,
           categories: form.pledgeVoting.categories.map((c) => ({
             id: c.id,
             label: c.label,

@@ -1,3 +1,7 @@
+import type { KeyCastMember, WishListCastMember } from '@/lib/cast-members';
+
+export type { KeyCastMember, WishListCastMember };
+
 export type SubmitProjectFormData = {
   step1?: {
     filmTitle: string;
@@ -14,9 +18,9 @@ export type SubmitProjectFormData = {
     videoFileName?: string;
   };
   step3?: {
-    cast: { actorName: string; actorEmail: string; role: string }[];
+    cast: KeyCastMember[];
     crew: { name: string; position: string; email: string }[];
-    wishListCast: string;
+    wishListCast: WishListCastMember[];
   };
   step4?: {
     totalBudget: string;

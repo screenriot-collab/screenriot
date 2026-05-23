@@ -12,4 +12,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/film-pages', label: 'Film pages' },
   { to: '/contributions', label: 'Contributions' },
   { to: '/films-with-investments', label: 'Films with investments' },
+  { to: '/script-credit-purchases', label: 'Script credits' },
+  { to: '/submission-fee-payments', label: 'Submission fees' },
+  { to: '/casting-suggestions', label: 'Casting suggestions' },
 ];

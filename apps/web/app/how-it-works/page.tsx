@@ -4,7 +4,8 @@ import {
   FLOW_LEGEND,
   HOW_IT_WORKS_PAGE,
 } from '@/markup/how-it-works';
-import { IMAGES } from '@/lib/constants';
+import { StrokeIcon } from '@/components/ui/stroke-icon';
+import type { StrokeIconName } from '@/components/ui/stroke-icon';
 
 export const metadata: Metadata = {
   title: 'How It Works | Screen Riot',
@@ -39,12 +40,8 @@ export default function HowItWorksPage() {
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white"
                   aria-hidden
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={IMAGES.icons[block.iconKey]}
-                    alt=""
-                    width={24}
-                    height={24}
+                  <StrokeIcon
+                    name={block.iconKey as StrokeIconName}
                     className="h-6 w-6"
                   />
                 </span>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { TreatmentMock, CharacterMock } from '@/markup/film-detail';
+import { ProposeEditPencil } from '@/components/film-propose/ProposeEditPencil';
 
 const DESCRIPTION_PREVIEW_LEN = 120;
 
@@ -47,7 +48,16 @@ export function FilmDetailStoryCharactersSection({ treatment, characters }: Film
         {expanded && (
           <>
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Treatment</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Treatment</h3>
+                <ProposeEditPencil
+                  target={{
+                    path: 'pageContent.treatment.act1',
+                    label: 'Treatment (Act 1)',
+                    oldValue: treatment.act1 ?? '',
+                  }}
+                />
+              </div>
               <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-white/10 bg-white/[0.02] p-4">
                 <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-300">
                   {treatment.act1}
@@ -91,24 +101,36 @@ export function FilmDetailStoryCharactersSection({ treatment, characters }: Film
                         </div>
                         <p className="mt-3 font-semibold text-white">{c.name}</p>
                         <p className="mt-0.5 text-xs text-gray-400">{c.role}</p>
-                        {desc ? (
-                          <>
-                            <p className="mt-3 w-full text-left text-sm leading-relaxed text-gray-400">
+                        <div className="mt-3 flex w-full items-start justify-between gap-2">
+                          {desc ? (
+                            <p className="min-w-0 flex-1 text-left text-sm leading-relaxed text-gray-400">
                               {preview}
                             </p>
-                            {showToggle && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setExpandedDesc((prev) => ({ ...prev, [c.id]: !prev[c.id] }))
-                                }
-                                className="mt-2 text-sm font-medium text-screenriot-accent-blue hover:underline"
-                              >
-                                {isExpanded ? 'Show less' : 'Read more'}
-                              </button>
-                            )}
-                          </>
-                        ) : null}
+                          ) : (
+                            <p className="min-w-0 flex-1 text-left text-sm italic text-gray-500">
+                              No description
+                            </p>
+                          )}
+                          <ProposeEditPencil
+                            target={{
+                              path: `pageContent.mainCharacters.${c.id}.description`,
+                              label: `Main Characters — ${c.name} — Description`,
+                              oldValue: desc,
+                            }}
+                            className="shrink-0"
+                          />
+                        </div>
+                        {desc && showToggle && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedDesc((prev) => ({ ...prev, [c.id]: !prev[c.id] }))
+                            }
+                            className="mt-2 text-sm font-medium text-screenriot-accent-blue hover:underline"
+                          >
+                            {isExpanded ? 'Show less' : 'Read more'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

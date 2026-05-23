@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import type { PledgeVotingMock, VotingCategory } from '@/markup/film-detail';
+import type { FanVotingMock, TabbedSectionCasting, VotingCategory } from '@/markup/film-detail';
+import { FilmDetailDreamCastVoteSection } from '@/components/film-detail/FilmDetailDreamCastVoteSection';
+import { FilmDetailDreamCastSuggestSection } from '@/components/film-detail/FilmDetailDreamCastSuggestSection';
+import { ParticipationGateModal } from '@/components/film-detail/ParticipationGateModal';
+import { getErrorMessage } from '@/lib/api';
 import { createPledgeVote, fetchMyPledgeVote } from '@/lib/films-api';
+import { useHasMounted } from '@/hooks/use-has-mounted';
+import { useParticipationGate } from '@/hooks/use-participation-gate';
 
-// Stack of books/documents
 function IconStory() {
   return (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
@@ -16,7 +19,7 @@ function IconStory() {
     </svg>
   );
 }
-// Scroll/parchment
+
 function IconScript() {
   return (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
@@ -24,7 +27,7 @@ function IconScript() {
     </svg>
   );
 }
-// Three people / cast
+
 function IconCasting() {
   return (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
@@ -42,15 +45,27 @@ function CategoryIcon({ icon }: { icon: VotingCategory['icon'] }) {
 const SLIDER_MIN = 0;
 const SLIDER_MAX = 10;
 
-interface FilmDetailPledgeVotingSectionProps {
-  data: PledgeVotingMock;
+interface FilmDetailFanVotingSectionProps {
+  data: FanVotingMock;
+  castingVote: TabbedSectionCasting;
   filmId?: string;
+  filmSlug?: string;
+  thoughtsPlaceholder?: string;
 }
 
-export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledgeVotingSectionProps) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+export function FilmDetailFanVotingSection({
+  data,
+  castingVote,
+  filmId,
+  filmSlug,
+  thoughtsPlaceholder = 'Share your review about this project, the story, casting ideas, or anything else…',
+}: FilmDetailFanVotingSectionProps) {
+  const mounted = useHasMounted();
+  const signInCallbackUrl = filmSlug ? `/films/${filmSlug}` : undefined;
+  const { canParticipate, accessToken, gateVariant, closeGate, requireParticipation } =
+    useParticipationGate(signInCallbackUrl);
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [thoughts, setThoughts] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,39 +73,42 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
   const categoryIds = data.categories.map((c) => c.id);
 
   useEffect(() => {
-    if (status !== 'authenticated' || !filmId || !session?.accessToken) return;
+    if (!mounted || !canParticipate || !filmId || !accessToken) return;
     let cancelled = false;
-    fetchMyPledgeVote(filmId, session.accessToken as string)
+    fetchMyPledgeVote(filmId, accessToken)
       .then((res) => {
         if (cancelled) return;
         if (res.scores && typeof res.scores === 'object') {
           setScores(res.scores);
           setSubmitted(true);
         }
+        if (res.reviewText) {
+          setThoughts(res.reviewText);
+        }
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [filmId, status, session?.accessToken]);
+  }, [mounted, filmId, canParticipate, accessToken]);
 
   function handleChange(catId: string, value: number) {
+    if (submitted) return;
+    if (!requireParticipation()) return;
     setScores((s) => ({ ...s, [catId]: value }));
     setError(null);
   }
 
-  const allCategoriesHaveScore = categoryIds.length > 0 && categoryIds.every((id) => (scores[id] ?? 0) > 0);
+  const allCategoriesHaveScore =
+    categoryIds.length > 0 && categoryIds.every((id) => (scores[id] ?? 0) > 0);
   const canSubmit = !submitted && !submitting && allCategoriesHaveScore;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!filmId) return;
-    if (!session?.accessToken) {
-      router.push('/login');
-      return;
-    }
+    if (!requireParticipation() || !accessToken) return;
     if (!allCategoriesHaveScore) {
-      setError('Please set a score greater than 0 for all categories.');
+      setError('Please rate all categories before submitting.');
       return;
     }
     setSubmitting(true);
@@ -101,10 +119,10 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
         const v = scores[id] ?? 0;
         payload[id] = Math.max(1, Math.min(10, Math.round(v)));
       }
-      await createPledgeVote(filmId, payload, session.accessToken as string);
+      await createPledgeVote(filmId, payload, accessToken, thoughts.trim() || undefined);
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit votes');
+      setError(getErrorMessage(err, 'Failed to submit votes'));
     } finally {
       setSubmitting(false);
     }
@@ -112,13 +130,13 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
 
   return (
     <section
-      className="rounded-xl border border-white/10 bg-screenriot-bg-card p-6"
-      aria-labelledby="pledge-voting-heading"
+      className="rounded-xl border border-screenriot-accent-blue/20 bg-screenriot-accent-blue/5 p-6"
+      aria-labelledby="fan-voting-heading"
     >
-      <h2 id="pledge-voting-heading" className="text-lg font-semibold text-white">
-        {data.title ?? 'Pledge-Based Voting'}
+      <h2 id="fan-voting-heading" className="text-lg font-semibold text-white">
+        {data.title ?? 'Fan Voting'}
       </h2>
-      <p className="mt-1 text-sm text-gray-400">{data.subtitle}</p>
+      <p className="mt-1 text-sm text-screenriot-muted">{data.subtitle}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-8">
         {data.categories.map((cat) => {
@@ -134,10 +152,10 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
                   {cat.label}
                 </legend>
                 <div className="flex items-center gap-4 text-sm">
-                  <span className="text-gray-400">
+                  <span className="text-screenriot-muted">
                     Community: {cat.communityScore}/{cat.communityMax}
                   </span>
-                  <span className="rounded bg-sky-500/20 px-2 py-0.5 font-medium text-sky-300">
+                  <span className="rounded bg-screenriot-accent-blue/20 px-2 py-0.5 font-medium text-blue-300">
                     You: {value}/{cat.communityMax}
                   </span>
                 </div>
@@ -146,13 +164,11 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
                 <div className="relative h-6 w-full">
                   <div
                     className="absolute left-0 right-0 top-1/2 h-2 w-full -translate-y-1/2 rounded-full bg-white/10"
-                    role="presentation"
                     aria-hidden
                   />
                   <div
-                    className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-l-full bg-blue-500 transition-[width] duration-100"
+                    className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-l-full bg-screenriot-accent-blue transition-[width] duration-100"
                     style={{ width: `${percent}%` }}
-                    role="presentation"
                     aria-hidden
                   />
                   <input
@@ -162,14 +178,15 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
                     step={1}
                     value={value}
                     onChange={(e) => handleChange(cat.id, Number(e.target.value))}
-                    className="pledge-slider absolute inset-0 h-full w-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue/50"
+                    disabled={submitted}
+                    className="fan-vote-slider absolute inset-0 h-full w-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue/50 disabled:opacity-60"
                     aria-valuemin={SLIDER_MIN}
                     aria-valuemax={SLIDER_MAX}
                     aria-valuenow={value}
                     aria-label={`${cat.label}: ${value} out of ${cat.communityMax}`}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-gray-500">
+                <div className="flex justify-between text-xs text-screenriot-muted">
                   <span>{cat.labelLeft}</span>
                   <span>{cat.labelRight}</span>
                 </div>
@@ -178,21 +195,77 @@ export function FilmDetailPledgeVotingSection({ data, filmId }: FilmDetailPledge
           );
         })}
 
+        <div>
+          <label htmlFor="fan-voting-thoughts" className="block text-sm font-medium text-gray-300">
+            Your Review (Optional)
+          </label>
+          <textarea
+            id="fan-voting-thoughts"
+            value={thoughts}
+            onChange={(e) => setThoughts(e.target.value)}
+            placeholder={thoughtsPlaceholder}
+            rows={3}
+            disabled={submitted}
+            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-screenriot-accent-blue/50 focus:outline-none focus:ring-1 focus:ring-screenriot-accent-blue/30 disabled:opacity-60"
+          />
+          <p className="mt-1 text-xs text-screenriot-muted">
+            Optional — saved with your vote and shown in Reviews when published.
+          </p>
+        </div>
+
         {error && (
           <p className="text-sm text-red-400" role="alert">
             {error}
           </p>
         )}
 
+        {!submitted && canParticipate && !allCategoriesHaveScore ? (
+          <p className="text-xs text-screenriot-muted">
+            Move each slider above 0 (1–10) for Story, Script, and Casting to enable submit. Review
+            text is optional and does not activate the button.
+          </p>
+        ) : null}
+        {!canParticipate && !submitted ? (
+          <p className="text-xs text-screenriot-muted">
+            Sign in and complete verification to rate and submit your review.
+          </p>
+        ) : null}
+
         <button
           type="submit"
-          disabled={!canSubmit}
-          className="w-full rounded-lg bg-teal-500 py-3 text-sm font-semibold text-white hover:bg-teal-500/90 disabled:opacity-60 sm:w-auto sm:px-8"
-          aria-label={submitted ? 'Votes already submitted' : allCategoriesHaveScore ? 'Submit my votes' : 'Set a score for all categories to submit'}
+          disabled={!canSubmit && canParticipate}
+          onClick={(e) => {
+            if (!requireParticipation()) {
+              e.preventDefault();
+            }
+          }}
+          className="w-full rounded-lg bg-screenriot-accent-blue py-3 text-sm font-semibold text-white hover:bg-screenriot-accent-blue/90 disabled:opacity-60 sm:w-auto sm:px-8"
         >
-          {submitted ? 'Votes submitted' : submitting ? 'Submitting…' : 'Submit My Votes'}
+          {submitted ? 'Votes submitted' : submitting ? 'Submitting…' : 'Submit my votes'}
         </button>
       </form>
+
+      <FilmDetailDreamCastVoteSection
+        data={castingVote}
+        filmId={filmId}
+        requireParticipation={requireParticipation}
+        accessToken={canParticipate ? accessToken : undefined}
+      />
+
+      <FilmDetailDreamCastSuggestSection
+        filmId={filmId}
+        requireParticipation={requireParticipation}
+        accessToken={canParticipate ? accessToken : undefined}
+      />
+
+      {gateVariant ? (
+        <ParticipationGateModal
+          variant={gateVariant}
+          onClose={closeGate}
+          signInCallbackUrl={signInCallbackUrl}
+          purpose="participate"
+        />
+      ) : null}
     </section>
   );
 }

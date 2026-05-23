@@ -126,12 +126,15 @@ export function SubmitProjectWizard({
               step3={wizard.step3}
               error={wizard.stepErrors[3] ?? null}
               onUpdateCast={wizard.updateStep3Cast}
+              onUpdateWishList={wizard.updateStep3WishList}
+              onToggleWishListStatus={wizard.toggleWishListStatus}
               onUpdateCrew={wizard.updateStep3Crew}
               onAddCast={wizard.addStep3Cast}
+              onAddWishList={wizard.addStep3WishList}
               onAddCrew={wizard.addStep3Crew}
               onRemoveCast={wizard.removeStep3Cast}
+              onRemoveWishList={wizard.removeStep3WishList}
               onRemoveCrew={wizard.removeStep3Crew}
-              onSetStep3={wizard.setStep3}
             />
           </>
         )}

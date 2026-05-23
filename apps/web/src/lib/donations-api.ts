@@ -30,6 +30,22 @@ export interface CreateCheckoutSessionResponse {
   url: string;
 }
 
+export async function confirmDonationCheckout(
+  sessionId: string,
+  accessToken: string,
+): Promise<{
+  created: boolean;
+  donationId: string;
+  filmId: string;
+  filmTitle: string;
+  amount: number;
+}> {
+  return fetchApi('donations/confirm', accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
+  });
+}
+
 export async function createCheckoutSession(
   params: CreateCheckoutSessionParams,
   accessToken: string,

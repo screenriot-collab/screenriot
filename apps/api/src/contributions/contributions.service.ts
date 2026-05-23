@@ -15,7 +15,13 @@ export class ContributionsService {
     // Check if film exists and belongs to user
     const film = await this.prisma.film.findUnique({
       where: { id: dto.filmId },
-      select: { id: true, title: true, filmmakerId: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        filmmakerId: true,
+        status: true,
+        pagePublished: true,
+      },
     });
 
     if (!film) {
@@ -24,6 +30,16 @@ export class ContributionsService {
 
     if (film.filmmakerId !== userId) {
       throw new BadRequestException('You do not own this film');
+    }
+
+    const allowedStatuses = ['approved', 'fundraising', 'funded', 'closed'] as const;
+    if (!allowedStatuses.includes(film.status as (typeof allowedStatuses)[number])) {
+      throw new BadRequestException(
+        'Change requests are only allowed for approved or published films',
+      );
+    }
+    if (!film.pagePublished) {
+      throw new BadRequestException('Film page must be published before proposing changes');
     }
 
     const number = this.generateNumber();

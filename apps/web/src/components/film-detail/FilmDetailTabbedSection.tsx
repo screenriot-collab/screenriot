@@ -1,167 +1,188 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import type {
   TabbedSectionMock,
-  TabbedSectionSynopsis,
-  TabbedSectionCasting,
   TabbedSectionProduction,
+  TabbedSectionSynopsis,
   ProductionStage,
   UpdateItem,
+  FanVotingMock,
+  VotingCategory,
+  CommunityReview,
 } from '@/markup/film-detail';
-import { createCastingVote, fetchMyCastingVotes } from '@/lib/films-api';
 import { IMAGES } from '@/lib/constants';
+import { VotingCategoryIcon } from '@/components/film-detail/film-detail-voting-icons';
 
-type TabId = 'synopsis' | 'casting' | 'production' | 'updates';
+type TabId = 'reviews' | 'budget' | 'production' | 'updates';
 
 const TABS: { id: TabId; label: string; badgeKey?: 'updatesCount' }[] = [
-  { id: 'synopsis', label: 'Synopsis' },
-  { id: 'casting', label: 'Casting Vote' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'budget', label: 'Budget' },
   { id: 'production', label: 'Production' },
   { id: 'updates', label: 'Updates', badgeKey: 'updatesCount' },
 ];
 
-function SynopsisContent({ data }: { data: TabbedSectionSynopsis }) {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-base font-semibold text-white">Story Synopsis</h3>
-        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-300">{data.storySynopsis}</p>
-      </div>
-      <div>
-        <h3 className="text-base font-semibold text-white">Why This Film Matters</h3>
-        <p className="mt-2 text-sm leading-relaxed text-gray-300">{data.whyMatters}</p>
-      </div>
-      <div>
-        <h3 className="text-base font-semibold text-white">Budget Breakdown</h3>
-        <ul className="mt-3 space-y-2">
-          {data.budgetBreakdown.map((item) => (
-            <li key={item.label} className="flex items-center gap-2 text-sm text-gray-300">
-              <span className="font-medium text-white">{item.percent}%</span>
-              <span>-</span>
-              <span>{item.label}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+function computeOverallScore(categories: VotingCategory[]): number {
+  const scored = categories.filter((c) => c.communityScore > 0);
+  if (scored.length === 0) return 0;
+  const sum = scored.reduce((acc, c) => acc + c.communityScore, 0);
+  return Math.round((sum / scored.length) * 10) / 10;
 }
 
-function CastingContent({ data, filmId }: { data: TabbedSectionCasting; filmId?: string }) {
-  const [votedIds, setVotedIds] = useState<string[]>([]);
-  const [submittingId, setSubmittingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { data: session } = useSession();
-  const router = useRouter();
+function formatReviewDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
-  useEffect(() => {
-    async function loadMyVotes() {
-      if (!filmId || !session?.accessToken) return;
-      try {
-        const res = await fetchMyCastingVotes(filmId, session.accessToken as string | undefined);
-        setVotedIds(res.optionIds ?? []);
-      } catch {
-        // ignore, keep local state only
-      }
-    }
+function ReviewsContent({
+  fanVoting,
+  votesCount,
+  averageScore,
+  hasCommunityScore,
+  communityReviews,
+}: {
+  fanVoting: FanVotingMock;
+  votesCount: number;
+  averageScore: number;
+  hasCommunityScore: boolean;
+  communityReviews: CommunityReview[];
+}) {
+  const categories = fanVoting.categories;
+  const overall =
+    averageScore > 0 ? averageScore : computeOverallScore(categories);
 
-    void loadMyVotes();
-  }, [filmId, session?.accessToken]);
-
-  async function handleVote(optionId: string) {
-    if (votedIds.includes(optionId) || submittingId === optionId) return;
-
-    // If filmId is missing (e.g. mock data without API), keep local-only toggle
-    if (!filmId) {
-      setVotedIds((prev) => (prev.includes(optionId) ? prev : [...prev, optionId]));
-      return;
-    }
-
-    if (!session?.accessToken) {
-      router.push('/login');
-      return;
-    }
-
-    try {
-      setSubmittingId(optionId);
-      setError(null);
-      await createCastingVote(filmId, optionId, session.accessToken as string | undefined);
-      setVotedIds((prev) => (prev.includes(optionId) ? prev : [...prev, optionId]));
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Failed to submit vote';
-      if (message.toLowerCase().includes('already voted')) {
-        setVotedIds((prev) => (prev.includes(optionId) ? prev : [...prev, optionId]));
-      } else {
-        setError(message);
-      }
-    } finally {
-      setSubmittingId(null);
-    }
+  if (!hasCommunityScore || overall <= 0) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold text-white">Film Scores & Reviews</h3>
+        <p className="text-sm text-screenriot-muted">
+          No community scores yet. Use the Fan Voting section above to rate this project.
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold text-white">{data.title}</h3>
-        <p className="mt-1 text-sm text-gray-400">{data.subtitle}</p>
-      </div>
-      <ul className="space-y-4">
-        {data.cast.map((actor) => {
-          const alreadyVoted = votedIds.includes(actor.id);
-          const isSubmitting = submittingId === actor.id;
-          const disabled = alreadyVoted || isSubmitting;
-          return (
-            <li
-              key={actor.id}
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-white/10 bg-white/[0.02] p-4"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-white">{actor.name}</p>
-                <p className="text-sm text-gray-400">{actor.role}</p>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-sky-500 transition-[width] duration-300"
-                    style={{ width: `${actor.votePercent}%` }}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleVote(actor.id);
-                  }}
-                  disabled={disabled}
-                  aria-disabled={disabled}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    alreadyVoted
-                      ? 'bg-amber-500/20 text-amber-400'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/15 hover:text-white'
-                  } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-                  aria-pressed={alreadyVoted}
-                  aria-label={`Vote for ${actor.name}`}
+        <h3 className="text-base font-semibold text-white">Film Scores & Reviews</h3>
+        <div className="mt-4 rounded-xl border border-screenriot-accent-blue/20 bg-gradient-to-br from-screenriot-accent-blue/10 to-screenriot-accent-blue/5 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h4 className="font-semibold text-white">Overall Community Score</h4>
+              <p className="mt-1 text-sm text-screenriot-muted">{votesCount} total votes</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-6 w-6 text-screenriot-accent" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="text-3xl font-bold text-white">{overall.toFixed(1)}</span>
+              <span className="text-xl text-screenriot-muted">/10</span>
+            </div>
+          </div>
+          {categories.length > 0 ? (
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="rounded-lg bg-screenriot-bg/50 p-4 backdrop-blur-sm"
                 >
-                  <img src={IMAGES.icons.starFilled} alt="" width={16} height={16} className="h-4 w-4" aria-hidden />
-                  Vote
-                </button>
-                <span className="text-xs text-gray-500">{actor.votes} votes</span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {error && (
-        <p className="text-sm text-red-400" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
-        <img src={IMAGES.icons.lightbulb} alt="" width={20} height={20} className="h-5 w-5 shrink-0" aria-hidden />
-        <p className="text-sm text-amber-200/90">{data.tip}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <VotingCategoryIcon icon={cat.icon} />
+                      <p className="text-sm font-medium text-white">{cat.label}</p>
+                    </div>
+                    <span className="text-xl font-bold text-white">
+                      {cat.communityScore > 0 ? cat.communityScore.toFixed(1) : '—'}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-screenriot-accent-blue transition-[width] duration-300"
+                      style={{
+                        width: `${Math.min(100, (cat.communityScore / cat.communityMax) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
+      <div>
+        <h4 className="text-base font-semibold text-white">Community Reviews</h4>
+        {communityReviews.length === 0 ? (
+          <p className="mt-2 text-sm text-screenriot-muted">
+            No written reviews yet. Fans can add an optional comment when they submit scores in Fan
+            Voting above.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-4" role="list">
+            {communityReviews.map((review) => (
+              <li
+                key={review.id}
+                className="rounded-lg border border-white/10 bg-white/[0.02] p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex gap-3">
+                    <span
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-screenriot-accent-blue/20 text-xs font-semibold text-screenriot-accent-blue"
+                      aria-hidden
+                    >
+                      {review.authorInitials}
+                    </span>
+                    <div>
+                      <p className="font-medium text-white">{review.authorName}</p>
+                      <p className="text-xs text-screenriot-muted">{formatReviewDate(review.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm font-semibold text-white">
+                    <span>{review.rating.toFixed(1)}</span>
+                    <span className="text-screenriot-muted">/10</span>
+                  </div>
+                </div>
+                {review.reviewText ? (
+                  <p className="mt-3 text-sm leading-relaxed text-gray-300">{review.reviewText}</p>
+                ) : (
+                  <p className="mt-3 text-sm italic text-screenriot-muted">Rated without a written review.</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BudgetContent({ synopsis }: { synopsis: TabbedSectionSynopsis }) {
+  const items = synopsis.budgetBreakdown ?? [];
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-screenriot-muted">
+        Budget breakdown is taken from the film application (step 4). No breakdown available yet.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <h3 className="text-base font-semibold text-white">Budget Breakdown</h3>
+      <ul className="space-y-2">
+        {items.map((item) => (
+          <li
+            key={item.label}
+            className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 text-sm"
+          >
+            <span className="text-gray-300">{item.label}</span>
+            <span className="font-semibold text-white">{item.percent}%</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -177,7 +198,7 @@ function ProductionContent({ data }: { data: TabbedSectionProduction }) {
     }
     if (stage.status === 'in_progress') {
       return (
-        <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-sky-500 text-sky-400" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-screenriot-accent-blue text-screenriot-accent-blue" />
       );
     }
     return (
@@ -201,7 +222,7 @@ function ProductionContent({ data }: { data: TabbedSectionProduction }) {
             key={stage.id}
             className={`flex items-center gap-4 rounded-lg border p-4 ${
               stage.status === 'in_progress'
-                ? 'border-sky-500/50 bg-sky-500/5'
+                ? 'border-screenriot-accent-blue/50 bg-screenriot-accent-blue/5'
                 : 'border-white/10 bg-white/[0.02]'
             }`}
           >
@@ -235,11 +256,30 @@ function UpdatesContent({ items }: { items: UpdateItem[] }) {
 
 interface FilmDetailTabbedSectionProps {
   data: TabbedSectionMock;
-  filmId?: string;
+  fanVoting: FanVotingMock;
+  hasCommunityScore: boolean;
+  votesCount: number;
+  averageScore: number;
+  communityReviews: CommunityReview[];
 }
 
-export function FilmDetailTabbedSection({ data, filmId }: FilmDetailTabbedSectionProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('synopsis');
+function defaultTab(data: TabbedSectionMock, hasCommunityScore: boolean): TabId {
+  if (hasCommunityScore) return 'reviews';
+  if (data.synopsis.budgetBreakdown?.length) return 'budget';
+  if (data.production.stages?.length) return 'production';
+  if (data.updates.items?.length) return 'updates';
+  return 'reviews';
+}
+
+export function FilmDetailTabbedSection({
+  data,
+  fanVoting,
+  hasCommunityScore,
+  votesCount,
+  averageScore,
+  communityReviews,
+}: FilmDetailTabbedSectionProps) {
+  const [activeTab, setActiveTab] = useState<TabId>(() => defaultTab(data, hasCommunityScore));
   const updatesCount = data.updates.items.length;
 
   return (
@@ -284,20 +324,28 @@ export function FilmDetailTabbedSection({ data, filmId }: FilmDetailTabbedSectio
       </div>
       <div className="p-6">
         <div
-          id="panel-synopsis"
+          id="panel-reviews"
           role="tabpanel"
-          aria-labelledby="tab-synopsis"
-          hidden={activeTab !== 'synopsis'}
+          aria-labelledby="tab-reviews"
+          hidden={activeTab !== 'reviews'}
         >
-          {activeTab === 'synopsis' && <SynopsisContent data={data.synopsis} />}
+          {activeTab === 'reviews' && (
+            <ReviewsContent
+              fanVoting={fanVoting}
+              votesCount={votesCount}
+              averageScore={averageScore}
+              hasCommunityScore={hasCommunityScore}
+              communityReviews={communityReviews}
+            />
+          )}
         </div>
         <div
-          id="panel-casting"
+          id="panel-budget"
           role="tabpanel"
-          aria-labelledby="tab-casting"
-          hidden={activeTab !== 'casting'}
+          aria-labelledby="tab-budget"
+          hidden={activeTab !== 'budget'}
         >
-          {activeTab === 'casting' && <CastingContent data={data.castingVote} filmId={filmId} />}
+          {activeTab === 'budget' && <BudgetContent synopsis={data.synopsis} />}
         </div>
         <div
           id="panel-production"

@@ -8,6 +8,14 @@ export const DASHBOARD_HEADER = {
   subtitle: 'Track your investments, earnings, and voting history',
 } as const;
 
+export const SCRIPT_CREDITS_BALANCE = {
+  title: 'Script reading credits',
+  description: 'One balance for all films — buy credits once, unlock pages on any project.',
+  balanceLabel: 'Your balance',
+  hint: 'Buy more credits on a film page under Script Sample.',
+  footer: 'Unlocked pages are shown when you open each film.',
+} as const;
+
 export const WALLET_CARD = {
   label: 'Wallet Balance',
   value: '$492.50',
@@ -100,9 +108,9 @@ export const DASHBOARD_INVESTMENTS: DashboardInvestment[] = [
 // ——— Voting History ———
 
 export const VOTING_ABOUT = {
-  title: 'About Pledge-Based Voting',
+  title: 'About fan voting',
   description:
-    'Vote on creative decisions by pledging $25. Your pledge is held in escrow until the decision is locked. If your choice wins, the pledge converts to investment. Otherwise, it\'s returned to your wallet.',
+    'Vote on story, script, and casting for free on each film page. Investments are separate — funds are held in Stripe escrow until the campaign completes.',
 } as const;
 
 export type VotingEntryStatus = 'locked' | 'pending';
@@ -114,6 +122,7 @@ export type VotingEntry = {
   voteType: string;
   status: VotingEntryStatus;
   votedDate: string;
+  /** @deprecated Voting pledges removed; kept for mock history UI */
   pledgeAmount: string;
   outcome: VotingOutcome;
 };
@@ -125,7 +134,7 @@ export const VOTING_ENTRIES: VotingEntry[] = [
     voteType: 'Cast Vote',
     status: 'locked',
     votedDate: 'Oct 12, 2025',
-    pledgeAmount: '$25',
+    pledgeAmount: 'Free',
     outcome: 'converted',
   },
   {
@@ -134,7 +143,7 @@ export const VOTING_ENTRIES: VotingEntry[] = [
     voteType: 'Script Vote',
     status: 'pending',
     votedDate: 'Oct 20, 2025',
-    pledgeAmount: '$25',
+    pledgeAmount: 'Free',
     outcome: 'escrow',
   },
   {
@@ -143,7 +152,7 @@ export const VOTING_ENTRIES: VotingEntry[] = [
     voteType: 'Story Vote',
     status: 'locked',
     votedDate: 'Oct 28, 2025',
-    pledgeAmount: '$25',
+    pledgeAmount: 'Free',
     outcome: 'escrow',
   },
 ];

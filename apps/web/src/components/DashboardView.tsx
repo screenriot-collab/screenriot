@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { IMAGES } from '@/lib/constants';
 import { useMyDonations } from '@/hooks/useMyDonations';
+import { ScriptCreditsBalance } from '@/components/dashboard/ScriptCreditsBalance';
 import {
   DASHBOARD_HEADER,
   WALLET_CARD,
@@ -54,6 +55,8 @@ export function DashboardView() {
           {DASHBOARD_HEADER.subtitle}
         </p>
       </header>
+
+      <ScriptCreditsBalance />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Financial summary">
         <SummaryCard
@@ -267,10 +270,10 @@ export function DashboardView() {
                       <p className="mt-1 text-xs text-screenriot-muted">Voted on {entry.votedDate}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-screenriot-muted">Pledge Amount</p>
+                      <p className="text-xs text-screenriot-muted">Vote type</p>
                       <p className="text-lg font-bold text-white">{entry.pledgeAmount}</p>
-                      <p className={entry.outcome === 'converted' ? 'text-sm font-medium text-green-400' : 'text-sm text-white'}>
-                        {entry.outcome === 'converted' ? 'Converted to investment' : 'In escrow'}
+                      <p className="text-sm text-screenriot-muted">
+                        {entry.outcome === 'converted' ? 'Recorded' : 'Pending sync'}
                       </p>
                     </div>
                   </li>

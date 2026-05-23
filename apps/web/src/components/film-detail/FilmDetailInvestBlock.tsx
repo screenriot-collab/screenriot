@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { createCheckoutSession } from '@/lib/donations-api';
+import { formatNumber } from '@/lib/format-number';
+import { useHasMounted } from '@/hooks/use-has-mounted';
 import { useVerificationStatus } from '@/hooks/useVerificationStatus';
 import { InvestGateModal } from './InvestGateModal';
 import type { InvestmentTier } from '@/markup/film-detail';
 
 const CARD_BASE =
-  'block w-full rounded-lg border border-white/10 bg-white/[0.02] p-4 text-left transition-colors cursor-pointer hover:border-sky-500/40 hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-screenriot-bg';
+  'block w-full rounded-lg border border-white/10 bg-white/[0.02] p-4 text-left transition-colors cursor-pointer hover:border-screenriot-accent-blue/40 hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg';
 
 interface FilmDetailInvestBlockProps {
   filmId: string;
@@ -21,14 +23,16 @@ export function FilmDetailInvestBlock({
   slug,
   tiers,
 }: FilmDetailInvestBlockProps) {
+  const mounted = useHasMounted();
   const { data: session, status } = useSession();
   const { isVerified, loading: verificationLoading } = useVerificationStatus();
   const [loadingTierId, setLoadingTierId] = useState<string | null>(null);
   const [gateVariant, setGateVariant] = useState<'signin' | 'verify' | null>(null);
 
-  const isAuthenticated = status === 'authenticated' && session?.user;
+  const sessionReady = mounted && status !== 'loading' && !verificationLoading;
+  const isAuthenticated = sessionReady && status === 'authenticated' && Boolean(session?.user);
   const accessToken = (session as { accessToken?: string })?.accessToken;
-  const canInvest = isAuthenticated && isVerified && !verificationLoading;
+  const canInvest = isAuthenticated && isVerified;
 
   const handleTierClick = (tier: InvestmentTier) => {
     if (!isAuthenticated) {
@@ -46,7 +50,7 @@ export function FilmDetailInvestBlock({
     if (!isAuthenticated || !accessToken) return;
     const origin =
       typeof window !== 'undefined' ? window.location.origin : '';
-    const successUrl = `${origin}/films/${slug}?donation=success`;
+    const successUrl = `${origin}/films/${slug}?donation=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/films/${slug}?donation=cancelled`;
     setLoadingTierId(tier.id);
     try {
@@ -70,18 +74,20 @@ export function FilmDetailInvestBlock({
   return (
     <>
       <ul className="mt-3 space-y-3" role="list">
-        {tiers.map((tier) => (
+        {tiers.map((tier, index) => (
           <li key={tier.id}>
             {canInvest ? (
               <button
                 type="button"
                 onClick={() => handleTierClick(tier)}
                 disabled={loadingTierId !== null}
-                className={`${CARD_BASE} disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${CARD_BASE} disabled:cursor-not-allowed disabled:opacity-50 ${
+                  index === 0 ? 'border-2 border-screenriot-accent-blue' : ''
+                }`}
                 aria-label={`Invest $${tier.amount}: ${tier.name}`}
               >
                 <p className="font-semibold text-white">
-                  ${tier.amount.toLocaleString()} - {tier.name}
+                  ${formatNumber(tier.amount)} - {tier.name}
                 </p>
                 <ul className="mt-2 space-y-1 text-sm text-gray-400">
                   {tier.benefits.map((b) => (
@@ -91,7 +97,7 @@ export function FilmDetailInvestBlock({
                 <p className="mt-2 text-xs text-gray-500">
                   {tier.investorsCount} investors
                   {loadingTierId === tier.id && (
-                    <span className="ml-2 text-teal-400">Redirecting…</span>
+                    <span className="ml-2 text-screenriot-accent-blue">Redirecting…</span>
                   )}
                 </p>
               </button>
@@ -102,7 +108,7 @@ export function FilmDetailInvestBlock({
                   if (!isAuthenticated) setGateVariant('signin');
                   else if (!verificationLoading && !isVerified) setGateVariant('verify');
                 }}
-                className={CARD_BASE}
+                className={`${CARD_BASE} ${index === 0 ? 'border-2 border-screenriot-accent-blue' : ''}`}
                 aria-label={
                   !isAuthenticated
                     ? `Sign in to invest in ${tier.name} tier`
@@ -110,7 +116,7 @@ export function FilmDetailInvestBlock({
                 }
               >
                 <p className="font-semibold text-white">
-                  ${tier.amount.toLocaleString()} - {tier.name}
+                  ${formatNumber(tier.amount)} - {tier.name}
                 </p>
                 <ul className="mt-2 space-y-1 text-sm text-gray-400">
                   {tier.benefits.map((b) => (
@@ -120,7 +126,7 @@ export function FilmDetailInvestBlock({
                 <p className="mt-2 text-xs text-gray-500">
                   {tier.investorsCount} investors
                 </p>
-                <p className="mt-1 text-xs text-teal-400">
+                <p className="mt-1 text-xs text-screenriot-accent-blue">
                   {!isAuthenticated
                     ? 'Sign in to invest'
                     : 'Verify in Profile → Security to invest'}
