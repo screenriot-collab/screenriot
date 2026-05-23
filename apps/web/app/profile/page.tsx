@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
@@ -66,5 +67,15 @@ export default async function ProfilePage({ searchParams }: PageProps) {
     profileData = emptyProfileFromSession(role, email, name);
   }
 
-  return <ProfileView profileData={profileData} initialTab={initialTab} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="text-sm text-screenriot-muted" role="status">
+          Loading profile…
+        </div>
+      }
+    >
+      <ProfileView profileData={profileData} initialTab={initialTab} />
+    </Suspense>
+  );
 }

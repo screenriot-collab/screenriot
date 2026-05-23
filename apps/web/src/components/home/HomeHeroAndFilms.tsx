@@ -1,23 +1,10 @@
 'use client';
 
 import { HOME_HERO, GENRES } from '@/markup/home';
-import { IMAGES, HOME_FILMS_LIMIT } from '@/lib/constants';
+import { HOME_FILMS_LIMIT } from '@/lib/constants';
 import { usePublicFilmsList } from '@/hooks/usePublicFilmsList';
 import { FilmCard } from '@/components/films/FilmCard';
-
-function HeroSearchIcon() {
-  return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src={IMAGES.icons.search}
-      alt=""
-      width={20}
-      height={20}
-      className="h-5 w-5 shrink-0"
-      aria-hidden
-    />
-  );
-}
+import { StrokeIcon } from '@/components/ui/stroke-icon';
 
 export function HomeHeroAndFilms() {
   const {
@@ -47,7 +34,7 @@ export function HomeHeroAndFilms() {
 
   return (
     <>
-      <section className="border-b border-white/10 bg-screenriot-bg px-6 pb-16 pt-12">
+      <section className="border-b border-white/10 bg-gradient-to-b from-screenriot-accent-blue/10 to-screenriot-bg px-6 pb-16 pt-12">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
             {HOME_HERO.title}
@@ -65,7 +52,7 @@ export function HomeHeroAndFilms() {
                 className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-screenriot-muted"
                 aria-hidden
               >
-                <HeroSearchIcon />
+                <StrokeIcon name="search" className="h-5 w-5 shrink-0" />
               </span>
               <input
                 id="hero-search"
@@ -90,7 +77,7 @@ export function HomeHeroAndFilms() {
                   }}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg ${
                     genre === g
-                      ? 'bg-screenriot-accent text-screenriot-bg'
+                      ? 'bg-screenriot-accent-blue text-white'
                       : 'bg-white/10 text-gray-300 hover:bg-white/20'
                   }`}
                 >

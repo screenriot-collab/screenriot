@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CAST_TIER_VALUES } from '@/lib/cast-members';
 
 const LOGLINE_MAX = 2000;
 
@@ -20,8 +21,18 @@ export const step2Schema = z.object({
 
 const castMemberSchema = z.object({
   actorName: z.string(),
+  character: z.string(),
+  tier: z.enum(CAST_TIER_VALUES),
   actorEmail: z.string(),
-  role: z.string(),
+  characterDescription: z.string(),
+});
+
+const wishListMemberSchema = z.object({
+  actorName: z.string(),
+  character: z.string(),
+  tier: z.enum(CAST_TIER_VALUES),
+  characterDescription: z.string(),
+  status: z.enum(['wish_list', 'verified']),
 });
 
 const crewMemberSchema = z.object({
@@ -34,16 +45,33 @@ export const step3Schema = z
   .object({
     cast: z.array(castMemberSchema),
     crew: z.array(crewMemberSchema),
-    wishListCast: z.string(),
+    wishListCast: z.array(wishListMemberSchema),
   })
   .refine(
     (data) => {
       const hasValidCast = data.cast.some(
-        (c) => (c.actorName ?? '').trim() && (c.role ?? '').trim(),
+        (c) =>
+          (c.actorName ?? '').trim() &&
+          (c.character ?? '').trim() &&
+          (c.actorEmail ?? '').trim(),
       );
       return data.cast.length >= 1 && hasValidCast;
     },
-    { message: 'Fill actor and role for at least one cast member', path: ['cast'] },
+    { message: 'Fill actor name, character, and email for at least one cast member', path: ['cast'] },
+  )
+  .refine(
+    (data) => {
+      const invalidWish = data.wishListCast.filter(
+        (w) =>
+          ((w.actorName ?? '').trim() || (w.character ?? '').trim()) &&
+          (!(w.actorName ?? '').trim() || !(w.character ?? '').trim()),
+      );
+      return invalidWish.length === 0;
+    },
+    {
+      message: 'Each wish list row needs both actor name and character, or leave the row empty',
+      path: ['wishListCast'],
+    },
   )
   .refine(
     (data) => {

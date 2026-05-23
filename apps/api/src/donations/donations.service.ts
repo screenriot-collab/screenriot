@@ -1,14 +1,35 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { DonationStatus, VerificationStatus } from '.prisma/client';
+import { DonationStatus } from '.prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import Stripe from 'stripe';
+import { FilmsService } from '../films/films.service';
+import { assertVerifiedParticipant } from '../auth/require-verified-participant';
+import {
+  STRIPE_CHECKOUT_PURPOSE_SCRIPT_CREDITS,
+  STRIPE_CHECKOUT_PURPOSE_SUBMISSION_FEE,
+} from '../films/constants';
+import { isStripeCheckoutPaid, resolveStripeCheckoutSession } from './stripe-checkout.util';
+
+export type DonationFulfillmentResult = {
+  created: boolean;
+  donationId: string;
+  filmId: string;
+  filmTitle: string;
+  amount: number;
+  userId: string;
+  userEmail: string | null;
+  stripePaymentId: string;
+};
 
 @Injectable()
 export class DonationsService {
   private stripe: Stripe | null = null;
   private webhookSecret: string | null = null;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly films: FilmsService,
+  ) {
     const secret = process.env.STRIPE_SECRET_KEY;
     if (secret) {
       this.stripe = new Stripe(secret);
@@ -29,15 +50,7 @@ export class DonationsService {
     if (!this.stripe) {
       throw new BadRequestException('Stripe is not configured');
     }
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { verification: { select: { status: true } } },
-    });
-    if (!user?.verification || user.verification.status !== VerificationStatus.verified) {
-      throw new BadRequestException(
-        'Identity verification required. Complete verification in Profile → Security to invest.',
-      );
-    }
+    await assertVerifiedParticipant(this.prisma, userId);
     const film = await this.prisma.film.findUnique({
       where: { id: filmId },
       select: { id: true, title: true },
@@ -94,7 +107,10 @@ export class DonationsService {
       throw new BadRequestException(`Webhook signature verification failed: ${message}`);
     }
 
-    if (event.type === 'checkout.session.completed') {
+    if (
+      event.type === 'checkout.session.completed' ||
+      event.type === 'checkout.session.async_payment_succeeded'
+    ) {
       const session = event.data.object as Stripe.Checkout.Session;
       await this.handleCheckoutCompleted(session);
     }
@@ -126,25 +142,80 @@ export class DonationsService {
   }
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    if (session.metadata?.purpose === STRIPE_CHECKOUT_PURPOSE_SUBMISSION_FEE) {
+      await this.films.completeSubmissionFeeFromStripeSession(session);
+      return;
+    }
+    if (session.metadata?.purpose === STRIPE_CHECKOUT_PURPOSE_SCRIPT_CREDITS) {
+      await this.films.completeScriptCreditsFromStripeSession(session);
+      return;
+    }
+
     const filmId = session.metadata?.filmId;
     const userId = session.metadata?.userId;
     if (!filmId || !userId) {
       return;
     }
 
-    const amountCents = session.amount_total ?? 0;
-    const amount = amountCents / 100;
-    const stripePaymentId = (session.payment_intent as string) ?? session.id;
+    await this.completeDonationFromStripeSession(session);
+  }
 
-    const existing = await this.prisma.donation.findFirst({
-      where: { stripePaymentId },
-    });
-    if (existing) {
-      return;
+  /**
+   * Idempotent film investment / donation from Stripe Checkout (webhook or confirm).
+   */
+  async completeDonationFromStripeSession(
+    session: Stripe.Checkout.Session,
+  ): Promise<DonationFulfillmentResult> {
+    const filmId = session.metadata?.filmId;
+    const userId = session.metadata?.userId;
+    if (!filmId || !userId) {
+      throw new BadRequestException('Not a film investment checkout session');
+    }
+    if (session.metadata?.purpose) {
+      throw new BadRequestException('This checkout is not a film investment');
+    }
+    if (!isStripeCheckoutPaid(session)) {
+      throw new BadRequestException('Payment not completed in Stripe');
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.donation.create({
+    const amountCents = session.amount_total ?? 0;
+    const amount = amountCents / 100;
+    const stripePaymentId =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id ?? session.id;
+
+    const [existing, film, user] = await Promise.all([
+      this.prisma.donation.findFirst({ where: { stripePaymentId } }),
+      this.prisma.film.findUnique({
+        where: { id: filmId },
+        select: { id: true, title: true, currentAmount: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      }),
+    ]);
+
+    if (!film) {
+      throw new BadRequestException('Film not found');
+    }
+
+    if (existing) {
+      return {
+        created: false,
+        donationId: existing.id,
+        filmId,
+        filmTitle: film.title,
+        amount: Number(existing.amount),
+        userId,
+        userEmail: user?.email ?? null,
+        stripePaymentId,
+      };
+    }
+
+    const donation = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.donation.create({
         data: {
           userId,
           filmId,
@@ -154,17 +225,43 @@ export class DonationsService {
         },
       });
 
-      const film = await tx.film.findUnique({
+      const current = Number(film.currentAmount) || 0;
+      await tx.film.update({
         where: { id: filmId },
-        select: { currentAmount: true },
+        data: { currentAmount: current + amount },
       });
-      if (film) {
-        const current = Number(film.currentAmount) || 0;
-        await tx.film.update({
-          where: { id: filmId },
-          data: { currentAmount: current + amount },
-        });
-      }
+
+      return created;
     });
+
+    return {
+      created: true,
+      donationId: donation.id,
+      filmId,
+      filmTitle: film.title,
+      amount,
+      userId,
+      userEmail: user?.email ?? null,
+      stripePaymentId,
+    };
+  }
+
+  async confirmDonationCheckout(userId: string, stripeId: string): Promise<DonationFulfillmentResult> {
+    if (!this.stripe) {
+      throw new BadRequestException('Stripe is not configured');
+    }
+    const session = await resolveStripeCheckoutSession(this.stripe, stripeId);
+    if (session.metadata?.userId !== userId) {
+      throw new BadRequestException('Checkout session does not match your account');
+    }
+    return this.completeDonationFromStripeSession(session);
+  }
+
+  async fulfillDonationAsAdmin(stripeId: string): Promise<DonationFulfillmentResult> {
+    if (!this.stripe) {
+      throw new BadRequestException('Stripe is not configured');
+    }
+    const session = await resolveStripeCheckoutSession(this.stripe, stripeId);
+    return this.completeDonationFromStripeSession(session);
   }
 }

@@ -9,6 +9,8 @@ import {
   FilmPageEditTreatment,
   FilmPageEditMainCharacters,
   FilmPageEditSampleScenes,
+  FilmPageEditScreenplayScore,
+  FilmPageEditAiAnalysis,
   FilmPageEditSynopsisTab,
   FilmPageEditCastingVote,
   FilmPageEditProduction,
@@ -116,6 +118,10 @@ export default function FilmPageEdit() {
         <FilmPageEditMainCharacters form={form} setForm={setForm} />
 
         <FilmPageEditSampleScenes form={form} setForm={setForm} />
+
+        <FilmPageEditScreenplayScore form={form} setForm={setForm} />
+
+        <FilmPageEditAiAnalysis form={form} setForm={setForm} />
 
         <FilmPageEditSynopsisTab form={form} setForm={setForm} film={film} />
 

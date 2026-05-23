@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UserRole } from '.prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -9,6 +9,7 @@ import {
   FilmWithInvestmentsDto,
   DonationRowDto,
 } from './admin-investments.service';
+import { FulfillDonationDto } from './dto/fulfill-donation.dto';
 
 @ApiTags('admin-reports')
 @Controller('admin/reports/investments')
@@ -28,6 +29,11 @@ export class AdminInvestmentsController {
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
     });
+  }
+
+  @Post('fulfill')
+  fulfillDonation(@Body() dto: FulfillDonationDto) {
+    return this.investments.fulfillFromStripe(dto.sessionId);
   }
 
   @Get(':filmId/donations')

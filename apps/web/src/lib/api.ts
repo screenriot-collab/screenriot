@@ -2,6 +2,10 @@
  * Call NestJS API with session access token.
  * Use from server: pass session.accessToken; from client: useSession().data?.accessToken.
  */
+import { ApiError, parseApiErrorMessage } from './api-error';
+
+export { ApiError, getErrorMessage } from './api-error';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 export function getApiUrl(path: string): string {
@@ -25,7 +29,7 @@ export async function fetchApi<T>(
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text ? `API ${res.status}: ${text}` : `API ${res.status}: ${res.statusText}`);
+    throw new ApiError(res.status, parseApiErrorMessage(res.status, text));
   }
   return res.json() as Promise<T>;
 }

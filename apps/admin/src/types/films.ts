@@ -9,7 +9,11 @@ export type ReviewComments = {
 export type CastMember = {
   actorName?: string;
   actorEmail?: string;
+  /** @deprecated use character */
   role?: string;
+  character?: string;
+  tier?: string;
+  characterDescription?: string;
 };
 
 export type CrewMember = {
@@ -18,10 +22,20 @@ export type CrewMember = {
   email?: string;
 };
 
+export type WishListCastMember = {
+  actorName?: string;
+  character?: string;
+  role?: string;
+  tier?: string;
+  characterDescription?: string;
+  status?: 'wish_list' | 'verified';
+};
+
 export type Step3Data = {
   cast?: CastMember[];
   crew?: CrewMember[];
-  wishListCast?: string;
+  /** Legacy: comma-separated string. New: array of wish list rows. */
+  wishListCast?: string | WishListCastMember[];
 };
 
 export type BudgetBreakdownItem = {
@@ -137,6 +151,8 @@ export type CastingVoteOptionForm = {
   id: string;
   name: string;
   role: string;
+  status?: 'wish_list' | 'verified';
+  characterDescription?: string;
   votePercent: number;
   votes: number;
 };
@@ -167,11 +183,56 @@ export type UpdateItemForm = {
   description: string;
 };
 
+export type ScriptSamplePageForm = {
+  id?: string;
+  title: string;
+  content: string;
+};
+
+export type MetricForm = {
+  id: string;
+  label: string;
+  value: string;
+  description: string;
+};
+
+export type SimilarFilmForm = {
+  id: string;
+  title: string;
+  boxOffice: string;
+  roi: string;
+  rating: string;
+  matchPercent: number;
+};
+
+export type ScreenplayScoreCategoryForm = {
+  name: string;
+  aiScore: number;
+  expertScore: number;
+};
+
+export type ScreenplayScoreForm = {
+  aiOverall: number;
+  expertOverall: number;
+  categories: ScreenplayScoreCategoryForm[];
+};
+
+export type AiAnalysisForm = {
+  overallScore: number;
+  marketInsights: MetricForm[];
+  teamTalent: MetricForm[];
+  investmentMetrics: MetricForm[];
+};
+
 export type SampleScenesForm = {
   title: string;
   unlockMessage: string;
   pledgeAmount: number;
   description: string;
+  pages?: ScriptSamplePageForm[];
+  unlockedPageCount?: number;
+  lockedPageCount?: number;
+  creditsPerPage?: number;
 };
 
 export type PledgeVotingCategoryForm = {
@@ -213,6 +274,9 @@ export type FilmPageFormState = FilmPageUpdate & {
   productionStages?: ProductionStageForm[];
   updatesItems?: UpdateItemForm[];
   sampleScenes?: SampleScenesForm;
+  screenplayScore?: ScreenplayScoreForm;
+  aiAnalysis?: AiAnalysisForm;
+  similarFilms?: SimilarFilmForm[];
   pledgeVoting?: PledgeVotingForm;
   /** Sidebar donation tiers (Investment Tiers) shown on film detail page. */
   sidebarTiers?: InvestmentTierForm[];

@@ -1,6 +1,7 @@
 import { useState, Fragment } from 'react';
 import { useContributions } from '@/hooks/useContributions';
 import type { AdminContribution } from '@/types/contributions';
+import { ContributionRedline } from '@/components/contributions/ContributionRedline';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -162,23 +163,10 @@ export default function Contributions() {
                       <td colSpan={6} className="p-4">
                         <div className="grid gap-6 lg:grid-cols-2">
                           <div>
-                            <h3 className="font-semibold text-white">Proposed Changes</h3>
-                            <div className="mt-3 space-y-4">
-                              {Object.entries(c.changes).map(([key, val]) => (
-                                <div key={key} className="rounded border border-white/10 p-3">
-                                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{key}</p>
-                                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-300">
-                                    {typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val)}
-                                  </p>
-                                </div>
-                              ))}
+                            <h3 className="font-semibold text-white">Redline preview</h3>
+                            <div className="mt-3">
+                              <ContributionRedline changes={c.changes} comment={c.comment} />
                             </div>
-                            {c.comment && (
-                              <div className="mt-4 rounded bg-white/5 p-3">
-                                <p className="text-xs font-medium text-gray-500">Filmmaker comment:</p>
-                                <p className="mt-1 text-sm italic text-gray-300">"{c.comment}"</p>
-                              </div>
-                            )}
                             {c.adminComment && (
                               <div className="mt-4 rounded bg-red-500/10 p-3">
                                 <p className="text-xs font-medium text-red-400">Moderator comment:</p>

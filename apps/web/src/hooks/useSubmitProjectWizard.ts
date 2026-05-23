@@ -16,6 +16,7 @@ import {
   type UpdateFilmBody,
 } from '@/lib/films-api';
 import { STEP_4_BUDGET } from '@/markup/submit-project';
+import { emptyKeyCastMember, emptyWishListCastMember } from '@/lib/cast-members';
 import type {
   SubmitProjectFormData,
   Step2Files,
@@ -34,9 +35,9 @@ const defaultStep1 = {
 };
 
 const initialStep3 = {
-  cast: [{ actorName: '', actorEmail: '', role: '' }],
+  cast: [emptyKeyCastMember()],
   crew: [{ name: '', position: '', email: '' }],
-  wishListCast: '',
+  wishListCast: [],
 };
 
 const initialStep4 = {
@@ -121,11 +122,36 @@ export function useSubmitProjectWizard({
     setStepError(3, null);
   }
 
-  function updateStep3Cast(index: number, field: 'actorName' | 'actorEmail' | 'role', value: string) {
+  function updateStep3Cast(
+    index: number,
+    field: keyof NonNullable<SubmitProjectFormData['step3']>['cast'][number],
+    value: string,
+  ) {
     const next = [...(step3.cast ?? [])];
     if (!next[index]) return;
     next[index] = { ...next[index], [field]: value };
     setStep3({ cast: next, crew: step3.crew, wishListCast: step3.wishListCast });
+  }
+
+  function updateStep3WishList(
+    index: number,
+    field: keyof NonNullable<SubmitProjectFormData['step3']>['wishListCast'][number],
+    value: string,
+  ) {
+    const next = [...(step3.wishListCast ?? [])];
+    if (!next[index]) return;
+    next[index] = { ...next[index], [field]: value };
+    setStep3({ cast: step3.cast, crew: step3.crew, wishListCast: next });
+  }
+
+  function toggleWishListStatus(index: number) {
+    const next = [...(step3.wishListCast ?? [])];
+    if (!next[index]) return;
+    next[index] = {
+      ...next[index],
+      status: next[index].status === 'verified' ? 'wish_list' : 'verified',
+    };
+    setStep3({ cast: step3.cast, crew: step3.crew, wishListCast: next });
   }
 
   function updateStep3Crew(
@@ -141,9 +167,25 @@ export function useSubmitProjectWizard({
 
   function addStep3Cast() {
     setStep3({
-      cast: [...(step3.cast ?? []), { actorName: '', actorEmail: '', role: '' }],
+      cast: [...(step3.cast ?? []), emptyKeyCastMember()],
       crew: step3.crew,
       wishListCast: step3.wishListCast,
+    });
+  }
+
+  function addStep3WishList() {
+    setStep3({
+      cast: step3.cast,
+      crew: step3.crew,
+      wishListCast: [...(step3.wishListCast ?? []), emptyWishListCastMember()],
+    });
+  }
+
+  function removeStep3WishList(index: number) {
+    setStep3({
+      cast: step3.cast,
+      crew: step3.crew,
+      wishListCast: (step3.wishListCast ?? []).filter((_, i) => i !== index),
     });
   }
 
@@ -355,10 +397,14 @@ export function useSubmitProjectWizard({
     setStep5Files,
     setStep3,
     updateStep3Cast,
+    updateStep3WishList,
+    toggleWishListStatus,
     updateStep3Crew,
     addStep3Cast,
+    addStep3WishList,
     addStep3Crew,
     removeStep3Cast,
+    removeStep3WishList,
     removeStep3Crew,
     setStep4,
     updateStep4BreakdownPercent,

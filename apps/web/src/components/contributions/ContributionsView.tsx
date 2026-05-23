@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { Contribution } from '@/lib/contributions-api';
+import { ContributionChangeCard } from '@/components/contributions/ContributionChangeCard';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -52,33 +53,12 @@ export function ContributionsView({ contributions }: { contributions: Contributi
             </div>
           </div>
           
-          <div className="mt-4">
-            <h3 className="text-sm font-medium text-gray-300">Proposed Changes</h3>
-            <div className="mt-2 space-y-3">
-              {Object.entries(item.changes).map(([key, value]) => (
-                <div key={key} className="rounded-lg bg-white/5 p-3">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{key}</p>
-                  <p className="text-sm text-white whitespace-pre-wrap">
-                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {item.comment && (
-              <div className="mt-4">
-                <h3 className="text-xs font-medium text-gray-400">Your Comment</h3>
-                <p className="mt-1 text-sm text-gray-300 italic">&quot;{item.comment}&quot;</p>
-              </div>
-            )}
-
-            {item.status === 'rejected' && item.adminComment && (
-              <div className="mt-4 rounded-lg bg-red-500/10 p-3">
-                <h3 className="text-xs font-medium text-red-400 uppercase tracking-wider mb-1">Moderator Note</h3>
-                <p className="text-sm text-red-300">{item.adminComment}</p>
-              </div>
-            )}
-          </div>
+          <ContributionChangeCard
+            changes={item.changes}
+            comment={item.comment}
+            adminComment={item.adminComment}
+            status={item.status}
+          />
         </div>
       ))}
     </div>

@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '.prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { ContributionStatus } from '.prisma/client';
+import { applyContributionPatches } from '../contributions/contribution-patches.util';
 
 @Injectable()
 export class AdminContributionsService {
@@ -50,7 +52,17 @@ export class AdminContributionsService {
     const contribution = await this.prisma.filmContribution.findUnique({
       where: { id },
       include: {
-        film: { select: { id: true, title: true, pageContent: true } },
+        film: {
+          select: {
+            id: true,
+            title: true,
+            synopsis: true,
+            logline: true,
+            genre: true,
+            directorName: true,
+            pageContent: true,
+          },
+        },
         user: { select: { id: true, email: true, firstName: true, lastName: true, username: true } },
       },
     });
@@ -62,7 +74,17 @@ export class AdminContributionsService {
     const contribution = await this.prisma.filmContribution.findUnique({
       where: { id },
       include: {
-        film: { select: { id: true, title: true, pageContent: true } },
+        film: {
+          select: {
+            id: true,
+            title: true,
+            synopsis: true,
+            logline: true,
+            genre: true,
+            directorName: true,
+            pageContent: true,
+          },
+        },
         user: { select: { id: true, email: true, firstName: true } },
       },
     });
@@ -72,9 +94,10 @@ export class AdminContributionsService {
       throw new BadRequestException('Only pending contributions can be approved');
     }
 
-    // Merge changes into pageContent (we assume changes is a partial object of pageContent or similar)
-    const currentContent = (contribution.film.pageContent as Record<string, any>) || {};
-    const newContent = { ...currentContent, ...(contribution.changes as Record<string, any>) };
+    const { filmColumns, pageContent } = applyContributionPatches(
+      contribution.film,
+      contribution.changes,
+    );
 
     await this.prisma.$transaction(async (tx) => {
       await tx.filmContribution.update({
@@ -87,7 +110,10 @@ export class AdminContributionsService {
 
       await tx.film.update({
         where: { id: contribution.filmId },
-        data: { pageContent: newContent },
+        data: {
+          ...filmColumns,
+          pageContent: pageContent as Prisma.InputJsonValue,
+        },
       });
     });
 

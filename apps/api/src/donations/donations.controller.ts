@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { DonationsService } from './donations.service';
 import { CreateCheckoutSessionDto } from './dto/create-checkout-session.dto';
+import { ConfirmDonationDto } from './dto/confirm-donation.dto';
 
 @ApiTags('donations')
 @Controller('donations')
@@ -32,6 +33,15 @@ export class DonationsController {
   /**
    * Create Stripe Checkout Session for film donation. Returns redirect URL.
    */
+  @Post('confirm')
+  @UseGuards(JwtAuthGuard)
+  confirmDonation(
+    @Body() dto: ConfirmDonationDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.donations.confirmDonationCheckout(userId, dto.sessionId);
+  }
+
   @Post('checkout-session')
   @UseGuards(JwtAuthGuard)
   async createCheckoutSession(

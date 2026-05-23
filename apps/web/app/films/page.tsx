@@ -55,7 +55,7 @@ export default function DiscoverFilmsPage() {
                 }}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg ${
                   genre === g
-                    ? 'bg-screenriot-accent text-screenriot-bg'
+                    ? 'bg-screenriot-accent-blue text-white'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >

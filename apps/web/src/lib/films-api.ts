@@ -3,6 +3,11 @@
  */
 
 import { fetchApi, getApiUrl } from './api';
+import {
+  normalizeKeyCastMember,
+  normalizeWishListCast,
+  emptyKeyCastMember,
+} from '@/lib/cast-members';
 import type { FilmListItem, ProjectFormDataFromApi } from '@/markup/films';
 import type { PlaceholderFilm } from '@/markup/home';
 
@@ -64,25 +69,26 @@ function mapListItem(api: ApiFilmListItem): FilmListItem {
   };
 }
 
-/** Map API film to form data for SubmitProjectWizard. Normalize step3.cast: ensure actorName (old data may have only actorEmail). */
+/** Map API film to form data for SubmitProjectWizard. Normalizes legacy step3 shapes. */
 export function apiFilmToFormData(api: ApiFilm): ProjectFormDataFromApi {
-  const rawStep3 = api.step3 as { cast?: { actorName?: string; actorEmail?: string; role?: string }[]; crew?: unknown[]; wishListCast?: string } | null;
+  const rawStep3 = api.step3 as Record<string, unknown> | null;
   const step4 = api.step4 as ProjectFormDataFromApi['step4'] | null;
   const step3: ProjectFormDataFromApi['step3'] | undefined = rawStep3
     ? {
-        cast: (rawStep3.cast ?? []).map((c) => {
-          const actorName = (c.actorName ?? '').trim();
-          const actorEmail = (c.actorEmail ?? '').trim();
-          return {
-            actorName: actorName || (/@/.test(actorEmail) ? '' : actorEmail),
-            actorEmail: actorEmail || '',
-            role: (c.role ?? '').trim() || '',
-          };
+        cast: (Array.isArray(rawStep3.cast) ? rawStep3.cast : []).map((c) => {
+          const row = normalizeKeyCastMember((c ?? {}) as Record<string, unknown>);
+          const actorEmail = row.actorEmail;
+          const actorName =
+            row.actorName || (/@/.test(actorEmail) ? '' : actorEmail);
+          return { ...row, actorName, actorEmail };
         }),
         crew: (rawStep3.crew ?? []) as NonNullable<ProjectFormDataFromApi['step3']>['crew'],
-        wishListCast: rawStep3.wishListCast ?? '',
+        wishListCast: normalizeWishListCast(rawStep3.wishListCast),
       }
     : undefined;
+  if (step3 && step3.cast.length === 0) {
+    step3.cast = [emptyKeyCastMember()];
+  }
   return {
     step1: {
       filmTitle: api.title ?? '',
@@ -185,13 +191,31 @@ export async function updateFilm(
   return data.film;
 }
 
-export async function paySubmissionFee(
+export async function createSubmissionFeeCheckoutSession(
   filmId: string,
+  successUrl: string,
+  cancelUrl: string,
+  accessToken: string | undefined,
+): Promise<{ url: string }> {
+  return fetchApi<{ url: string }>(`films/${filmId}/pay/checkout`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ successUrl, cancelUrl }),
+  });
+}
+
+export async function confirmSubmissionFeePayment(
+  filmId: string,
+  sessionId: string,
   accessToken: string | undefined,
 ): Promise<ApiFilm> {
-  const data = await fetchApi<{ film: ApiFilm }>(`films/${filmId}/pay`, accessToken, {
-    method: 'POST',
-  });
+  const data = await fetchApi<{ film: ApiFilm }>(
+    `films/${filmId}/pay/confirm`,
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify({ sessionId }),
+    },
+  );
   return data.film;
 }
 
@@ -220,6 +244,11 @@ export interface ApiPublicFilmCard {
   daysLeft?: number;
   rating?: number;
   posterUrl?: string;
+  aiMarketScore?: number;
+  predictedROI?: string;
+  hasCommunityScore: boolean;
+  hasAiMarketScore: boolean;
+  hasPredictedRoi: boolean;
 }
 
 export interface PublicFilmsListResponse {
@@ -234,7 +263,9 @@ export interface ApiPublicFilmDetail {
   id: string;
   slug: string;
   title: string;
+  logline?: string;
   synopsis?: string;
+  runtime?: string;
   directorName?: string;
   directorAvatarUrl?: string;
   genre?: string;
@@ -250,6 +281,11 @@ export interface ApiPublicFilmDetail {
   cachedVotesCount?: number;
   cachedAverageScore?: number;
   trendingText?: string;
+  hasAiMarketScore?: boolean;
+  aiMarketScore?: number;
+  hasCommunityScore?: boolean;
+  communityAverageScore?: number;
+  hasScreenplayScore?: boolean;
   pageContent?: Record<string, unknown>;
   investorsCount: number;
   daysLeft?: number | null;
@@ -264,18 +300,34 @@ export interface ApiPublicFilmDetail {
     trendingText?: string;
     tiers: unknown[];
   };
+  communityReviews?: {
+    id: string;
+    authorName: string;
+    authorInitials: string;
+    rating: number;
+    reviewText: string | null;
+    createdAt: string;
+  }[];
 }
 
 /** Map API card to card view shape for FilmCard (slug, posterUrl from API). */
 export function apiCardToPlaceholder(
   api: ApiPublicFilmCard,
-): PlaceholderFilm & { slug?: string; posterUrl?: string } {
+): PlaceholderFilm & {
+  slug?: string;
+  posterUrl?: string;
+  aiMarketScore?: number;
+  predictedROI?: string;
+  hasCommunityScore: boolean;
+  hasAiMarketScore: boolean;
+  hasPredictedRoi: boolean;
+} {
   return {
     id: api.id,
     slug: api.slug,
     title: api.title,
     genre: api.genre ?? '',
-    rating: api.rating ?? 0,
+    rating: api.hasCommunityScore ? (api.rating ?? 0) : 0,
     progress: api.progress,
     goal: 100,
     raised: api.raised,
@@ -286,6 +338,11 @@ export function apiCardToPlaceholder(
     votes: api.votes,
     daysLeft: api.daysLeft ?? 0,
     posterUrl: api.posterUrl,
+    aiMarketScore: api.hasAiMarketScore ? api.aiMarketScore : undefined,
+    predictedROI: api.hasPredictedRoi ? api.predictedROI : undefined,
+    hasCommunityScore: api.hasCommunityScore ?? false,
+    hasAiMarketScore: api.hasAiMarketScore ?? false,
+    hasPredictedRoi: api.hasPredictedRoi ?? false,
   };
 }
 
@@ -305,14 +362,53 @@ export async function fetchPublicFilmsList(params?: {
   return fetchApi<PublicFilmsListResponse>(url, undefined, { method: 'GET' });
 }
 
-/** Fetch film page by slug for detail view (no auth) */
-export async function fetchFilmPageBySlug(slug: string): Promise<ApiPublicFilmDetail | null> {
+/** Fetch film page by slug for detail view (optional auth for script unlocks). */
+export async function fetchFilmPageBySlug(
+  slug: string,
+  accessToken?: string,
+): Promise<ApiPublicFilmDetail | null> {
   try {
-    const data = await fetchApi<{ film: ApiPublicFilmDetail }>(`films/slug/${encodeURIComponent(slug)}`, undefined, { method: 'GET' });
+    const data = await fetchApi<{ film: ApiPublicFilmDetail }>(
+      `films/slug/${encodeURIComponent(slug)}`,
+      accessToken,
+      { method: 'GET' },
+    );
     return data.film;
   } catch {
     return null;
   }
+}
+
+export async function unlockScriptPage(
+  filmId: string,
+  pageId: string,
+  accessToken: string,
+): Promise<{ page: { id: string; title: string; content: string }; scriptCredits: number }> {
+  return fetchApi(`films/${filmId}/script-sample/unlock`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ pageId }),
+  });
+}
+
+export async function createScriptCreditsCheckout(
+  successUrl: string,
+  cancelUrl: string,
+  accessToken: string,
+): Promise<{ url: string }> {
+  return fetchApi('films/script-credits/checkout', accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ successUrl, cancelUrl }),
+  });
+}
+
+export async function confirmScriptCreditsPurchase(
+  sessionId: string,
+  accessToken: string,
+): Promise<{ credited: boolean; creditsAdded: number; scriptCredits: number }> {
+  return fetchApi('films/script-credits/confirm', accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
+  });
 }
 
 const FILE_SLOTS = ['screenplay', 'poster', 'teaser', 'chain-of-title'] as const;
@@ -338,6 +434,18 @@ export async function uploadFilmFile(
   return res.json();
 }
 
+export async function createCastingSuggestion(
+  filmId: string,
+  actorName: string,
+  accessToken: string,
+  roleHint?: string,
+): Promise<{ id: string; actorName: string; status: string; createdAt: string }> {
+  return fetchApi(`films/${filmId}/casting-suggestions`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ actorName, roleHint }),
+  });
+}
+
 export async function createCastingVote(
   filmId: string,
   optionId: string,
@@ -358,23 +466,84 @@ export async function fetchMyCastingVotes(
   });
 }
 
+/** Free fan ratings (legacy route name / DB: FilmPledgeVote). Not a paid voting pledge. */
 export async function createPledgeVote(
   filmId: string,
   scores: Record<string, number>,
   accessToken: string | undefined,
+  reviewText?: string,
 ): Promise<{ ok: boolean }> {
+  const body: { scores: Record<string, number>; reviewText?: string } = { scores };
+  const trimmed = reviewText?.trim();
+  if (trimmed) body.reviewText = trimmed;
   return fetchApi<{ ok: boolean }>(`films/${filmId}/pledge-vote`, accessToken, {
     method: 'POST',
-    body: JSON.stringify({ scores }),
+    body: JSON.stringify(body),
   });
 }
 
 export async function fetchMyPledgeVote(
   filmId: string,
   accessToken: string | undefined,
-): Promise<{ scores: Record<string, number> | null }> {
-  const data = await fetchApi<{ scores: Record<string, number> | null }>(`films/${filmId}/pledge-vote/my`, accessToken, {
-    method: 'GET',
+): Promise<{ scores: Record<string, number> | null; reviewText: string | null }> {
+  const data = await fetchApi<{ scores: Record<string, number> | null; reviewText?: string | null }>(
+    `films/${filmId}/pledge-vote/my`,
+    accessToken,
+    { method: 'GET' },
+  );
+  return { scores: data.scores ?? null, reviewText: data.reviewText ?? null };
+}
+
+export type DiscussionSort = 'top' | 'new' | 'trending';
+
+export type DiscussionComment = {
+  id: string;
+  author: string;
+  authorInitials: string;
+  content: string;
+  upvotes: number;
+  createdAt: string;
+  isRoot: boolean;
+  hasUpvoted: boolean;
+  replies: DiscussionComment[];
+};
+
+export async function fetchFilmDiscussion(
+  filmId: string,
+  params: { sort?: DiscussionSort; page?: number; limit?: number },
+  accessToken?: string,
+): Promise<{
+  comments: DiscussionComment[];
+  total: number;
+  page: number;
+  sort: DiscussionSort;
+}> {
+  const q = new URLSearchParams();
+  if (params.sort) q.set('sort', params.sort);
+  if (params.page) q.set('page', String(params.page));
+  if (params.limit) q.set('limit', String(params.limit));
+  const suffix = q.toString() ? `?${q.toString()}` : '';
+  return fetchApi(`films/${filmId}/discussion${suffix}`, accessToken, { method: 'GET' });
+}
+
+export async function createDiscussionComment(
+  filmId: string,
+  body: string,
+  accessToken: string,
+  parentId?: string,
+): Promise<{ id: string; rootId: string }> {
+  return fetchApi(`films/${filmId}/discussion`, accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ body, parentId }),
   });
-  return data;
+}
+
+export async function toggleDiscussionUpvote(
+  filmId: string,
+  commentId: string,
+  accessToken: string,
+): Promise<{ upvoted: boolean; upvotes: number }> {
+  return fetchApi(`films/${filmId}/discussion/${commentId}/upvote`, accessToken, {
+    method: 'POST',
+  });
 }

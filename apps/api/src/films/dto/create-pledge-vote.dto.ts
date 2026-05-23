@@ -1,9 +1,14 @@
-import { IsObject } from 'class-validator';
+import { IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /** Scores per category id, e.g. { story: 8, script: 9, casting: 7 }. Values 1-10, all categories required. */
 export class CreatePledgeVoteDto {
   @IsObject()
   scores!: Record<string, number>;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  reviewText?: string;
 }
 
 export function validatePledgeScores(

@@ -1,4 +1,9 @@
+import { config } from 'dotenv';
+import { join } from 'path';
 import type { NextConfig } from 'next';
+
+// Monorepo: shared .env at repo root (see README).
+config({ path: join(__dirname, '../../.env') });
 
 const nextConfig: NextConfig = {
   // Use standalone only in Docker (Linux). On Windows, next build may fail at trace step due to symlinks.
