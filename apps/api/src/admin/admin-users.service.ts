@@ -1,4 +1,5 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { Injectable, ForbiddenException, ConflictException } from '@nestjs/common';
 import { UserRole } from '.prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
@@ -31,14 +32,13 @@ export class AdminUsersService {
     const existingUsername = await this.prisma.user.findUnique({
       where: { username: dto.username.trim() },
     });
-    if (existingUsername) throw new ForbiddenException('Username already taken');
+    if (existingUsername) throw new ConflictException('Username already taken');
 
     const existingEmail = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
-    if (existingEmail) throw new ForbiddenException('Email already registered');
+    if (existingEmail) throw new ConflictException('Email already registered');
 
-    const bcrypt = await import('bcrypt');
     const placeholderHash = await bcrypt.hash('CHANGE_ME_RESET_PASSWORD', 10);
 
     const user = await this.prisma.user.create({
