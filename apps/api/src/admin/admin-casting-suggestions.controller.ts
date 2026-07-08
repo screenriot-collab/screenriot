@@ -10,6 +10,7 @@ import {
   CastingSuggestionRowDto,
 } from './admin-casting-suggestions.service';
 import { UpdateCastingSuggestionDto } from './dto/update-casting-suggestion.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @ApiTags('admin-casting-suggestions')
 @Controller('admin/casting-suggestions')
@@ -20,31 +21,29 @@ export class AdminCastingSuggestionsController {
 
   @Get('films')
   listFilms(
+    @Query() pagination: PaginationQueryDto,
     @Query('status') status?: string,
     @Query('search') search?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
   ): Promise<{ films: CastingSuggestionFilmSummaryDto[]; total: number }> {
     return this.suggestions.listFilms({
       status,
       search,
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
+      page: pagination.page,
+      limit: pagination.limit,
     });
   }
 
   @Get()
   list(
+    @Query() pagination: PaginationQueryDto,
     @Query('filmId') filmId: string,
     @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
   ): Promise<{ suggestions: CastingSuggestionRowDto[]; total: number }> {
     return this.suggestions.list({
       status,
       filmId,
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
+      page: pagination.page,
+      limit: pagination.limit,
     });
   }
 

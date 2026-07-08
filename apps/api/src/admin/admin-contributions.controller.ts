@@ -14,6 +14,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '.prisma/client';
 import { AdminContributionsService } from './admin-contributions.service';
 import { AdminRejectContributionDto } from './dto/admin-reject-contribution.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -25,14 +26,16 @@ export class AdminContributionsController {
 
   @Get()
   findAll(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() pagination: PaginationQueryDto,
     @Query('status') status?: string,
     @Query('search') search?: string,
   ) {
-    const p = Math.max(1, parseInt(page || '1', 10));
-    const l = Math.min(100, Math.max(1, parseInt(limit || '20', 10)));
-    return this.contributionsService.findAll(p, l, status, search);
+    return this.contributionsService.findAll(
+      pagination.page ?? 1,
+      pagination.limit ?? 20,
+      status,
+      search,
+    );
   }
 
   @Get(':id')

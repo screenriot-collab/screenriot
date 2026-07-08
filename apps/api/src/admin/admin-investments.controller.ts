@@ -10,6 +10,7 @@ import {
   DonationRowDto,
 } from './admin-investments.service';
 import { FulfillDonationDto } from './dto/fulfill-donation.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @ApiTags('admin-reports')
 @Controller('admin/reports/investments')
@@ -20,14 +21,13 @@ export class AdminInvestmentsController {
 
   @Get()
   getFilmsWithInvestments(
+    @Query() pagination: PaginationQueryDto,
     @Query('status') status?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
   ): Promise<{ films: FilmWithInvestmentsDto[]; total: number }> {
     return this.investments.getFilmsWithInvestments({
       status,
-      page: page ? parseInt(page, 10) : undefined,
-      limit: limit ? parseInt(limit, 10) : undefined,
+      page: pagination.page,
+      limit: pagination.limit,
     });
   }
 

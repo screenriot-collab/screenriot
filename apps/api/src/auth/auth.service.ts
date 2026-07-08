@@ -40,6 +40,14 @@ export interface AuthResult {
 export class AuthService {
   private readonly googleClient: OAuth2Client | null = null;
 
+  private get frontendUrl(): string {
+    return (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  }
+
+  private get adminUrl(): string {
+    return (process.env.ADMIN_URL ?? 'http://localhost:5173').replace(/\/$/, '');
+  }
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -82,7 +90,7 @@ export class AuthService {
       { sub: userId, purpose: EMAIL_VERIFY_PURPOSE },
       { expiresIn: EMAIL_VERIFY_EXPIRY },
     );
-    const baseUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    const baseUrl = this.frontendUrl;
     const link = `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
     await this.mailService.sendMail({
       to: email,
@@ -136,7 +144,7 @@ export class AuthService {
       { sub: userId, purpose: ADMIN_INVITE_PURPOSE },
       { expiresIn: ADMIN_INVITE_EXPIRY },
     );
-    const baseUrl = (process.env.ADMIN_URL ?? 'http://localhost:5173').replace(/\/$/, '');
+    const baseUrl = this.adminUrl;
     const link = `${baseUrl}/accept-invite?token=${encodeURIComponent(token)}`;
     await this.mailService.sendMail({
       to: email,
@@ -163,7 +171,7 @@ export class AuthService {
         { sub: user.id, purpose: PASSWORD_RESET_PURPOSE },
         { expiresIn: PASSWORD_RESET_EXPIRY },
       );
-      const baseUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+      const baseUrl = this.frontendUrl;
       const link = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
       await this.mailService.sendMail({
         to: user.email,
@@ -217,7 +225,7 @@ export class AuthService {
       { sub: user.id, newEmail: normalized, purpose: EMAIL_CHANGE_PURPOSE },
       { expiresIn: EMAIL_CHANGE_EXPIRY },
     );
-    const baseUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    const baseUrl = this.frontendUrl;
     const link = `${baseUrl}/confirm-email-change?token=${encodeURIComponent(token)}`;
     await this.mailService.sendMail({
       to: normalized,
@@ -295,7 +303,7 @@ export class AuthService {
         { sub: user.id, purpose: ADMIN_PASSWORD_RESET_PURPOSE },
         { expiresIn: ADMIN_PASSWORD_RESET_EXPIRY },
       );
-      const baseUrl = (process.env.ADMIN_URL ?? 'http://localhost:5173').replace(/\/$/, '');
+      const baseUrl = this.adminUrl;
       const link = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
       await this.mailService.sendMail({
         to: user.email,

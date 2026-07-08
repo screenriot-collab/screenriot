@@ -38,8 +38,7 @@ import { CreateCastingSuggestionDto } from './dto/create-casting-suggestion.dto'
 import { FilmDiscussionService } from './film-discussion.service';
 import { ListDiscussionQueryDto } from './dto/list-discussion.dto';
 import { CreateDiscussionCommentDto } from './dto/create-discussion-comment.dto';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB for video/PDF
+import { MAX_FILE_SIZE } from '../common/constants';
 
 @ApiTags('films')
 @Controller('films')
