@@ -91,12 +91,16 @@ export function Step2Materials({ form, files, error, onFilesChange, onClearError
               {displayName && (
                 <p className="mt-2 max-w-full truncate text-xs text-screenriot-muted">
                   {displayName}
-                  {serverFileName && !file && (
-                    <span className="ml-1 text-screenriot-muted/80">(from server)</span>
-                  )}
                 </p>
               )}
             </div>
+            {serverFileName && !file && (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-400">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={IMAGES.icons.checkVerified} alt="" width={14} height={14} className="h-3.5 w-3.5" />
+                Already uploaded - choose a new file only to replace it.
+              </p>
+            )}
           </div>
         );
       })}
