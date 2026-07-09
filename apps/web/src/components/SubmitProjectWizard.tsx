@@ -51,6 +51,8 @@ export function SubmitProjectWizard({
         buttonLabel={successCopy.buttonLabel}
         buttonHref={successCopy.buttonHref}
         uploadWarnings={wizard.uploadWarnings}
+        filmId={wizard.submittedFilmId}
+        submissionFeePaid={submissionFeePaid}
       />
     );
   }
@@ -159,6 +161,7 @@ export function SubmitProjectWizard({
               files={wizard.step5Files}
               error={wizard.stepErrors[5] ?? null}
               submissionFeePaid={wizard.submissionFeePaid}
+              filmId={filmId}
               onSetStep5={wizard.setStep5}
               onFilesChange={wizard.setStep5Files}
               onClearError={() => wizard.setStepError(5, null)}

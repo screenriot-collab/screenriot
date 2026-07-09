@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SUBMISSION_FEE_CTA } from '@/markup/submit-project';
 import type { UploadWarning } from '@/types/submit-project';
 
 const SLOT_LABELS: Record<UploadWarning['slot'], string> = {
@@ -14,6 +15,8 @@ interface SubmissionSuccessProps {
   buttonLabel: string;
   buttonHref: string;
   uploadWarnings: UploadWarning[];
+  filmId?: string | null;
+  submissionFeePaid?: boolean;
 }
 
 export function SubmissionSuccess({
@@ -22,7 +25,10 @@ export function SubmissionSuccess({
   buttonLabel,
   buttonHref,
   uploadWarnings,
+  filmId,
+  submissionFeePaid = false,
 }: SubmissionSuccessProps) {
+  const needsPayment = !submissionFeePaid && !!filmId;
   return (
     <div className="mx-auto max-w-2xl rounded-xl border border-white/10 bg-screenriot-bg-card p-8 text-center">
       <h2 className="text-2xl font-semibold text-white">{title}</h2>
@@ -48,9 +54,25 @@ export function SubmissionSuccess({
           </ul>
         </div>
       )}
+      {needsPayment && (
+        <div className="mt-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-left">
+          <p className="text-sm font-semibold text-amber-300">{SUBMISSION_FEE_CTA.title}</p>
+          <p className="mt-1 text-sm text-screenriot-muted">{SUBMISSION_FEE_CTA.description}</p>
+          <Link
+            href={`/dashboard/films/pay?film=${filmId}`}
+            className="mt-4 inline-block rounded-lg bg-screenriot-accent-blue px-6 py-3 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg"
+          >
+            {SUBMISSION_FEE_CTA.buttonLabel}
+          </Link>
+        </div>
+      )}
       <Link
         href={buttonHref}
-        className="mt-6 inline-block rounded-lg bg-screenriot-accent-blue px-6 py-3 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg"
+        className={
+          needsPayment
+            ? 'mt-4 inline-block text-sm font-medium text-screenriot-muted underline hover:text-white'
+            : 'mt-6 inline-block rounded-lg bg-screenriot-accent-blue px-6 py-3 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg'
+        }
       >
         {buttonLabel}
       </Link>

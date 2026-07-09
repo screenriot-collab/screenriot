@@ -34,6 +34,12 @@ export const WIZARD_ACTIONS = {
   updateButton: 'Update Project',
 } as const;
 
+export const SUBMISSION_FEE_CTA = {
+  title: 'One step left: pay the submission fee',
+  description: 'Your project is saved as a draft. It will not be sent for review until the submission fee is paid.',
+  buttonLabel: 'Pay Submission Fee',
+} as const;
+
 export const SUBMIT_STEPS = [
   { id: 1, label: 'Project Details', iconKey: 'filmReel' as const },
   { id: 2, label: 'Script & Materials', iconKey: 'document' as const },

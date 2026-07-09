@@ -100,6 +100,7 @@ export function useSubmitProjectWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [uploadWarnings, setUploadWarnings] = useState<UploadWarning[]>([]);
+  const [submittedFilmId, setSubmittedFilmId] = useState<string | null>(null);
 
   const step1 = form.watch('step1') ?? defaultStep1;
   const step3 = form.watch('step3') ?? initialStep3;
@@ -337,6 +338,7 @@ export function useSubmitProjectWizard({
       }
     }
     if (failed.length > 0) setUploadWarnings(failed);
+    setSubmittedFilmId(targetId);
     setSubmitted(true);
   }
 
@@ -382,6 +384,7 @@ export function useSubmitProjectWizard({
     isEditMode,
     submissionFeePaid,
     submitted,
+    submittedFilmId,
     isSubmitting,
     submitError,
     uploadWarnings,
