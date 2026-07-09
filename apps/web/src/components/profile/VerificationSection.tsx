@@ -370,6 +370,11 @@ export function VerificationSection({ role, verification }: VerificationSectionP
             {docRequirements.map((req) => {
               const existing = getDocForType(req.type);
               const isUploading = uploading === req.type;
+              /** Admin can reject a single document without rejecting the whole
+               * verification (e.g. everything else is fine, just this one needs
+               * redoing) - allow re-upload for that document even if the overall
+               * status is "pending" or "verified". */
+              const canReuploadThis = canUpload || existing?.status === 'rejected';
 
               return (
                 <li
@@ -435,7 +440,7 @@ export function VerificationSection({ role, verification }: VerificationSectionP
                     <p className="mt-2 text-xs text-screenriot-accent-blue">Uploading…</p>
                   )}
 
-                  {canUpload && !isUploading && (
+                  {canReuploadThis && !isUploading && (
                     <div className="mt-3">
                       <input
                         type="file"
