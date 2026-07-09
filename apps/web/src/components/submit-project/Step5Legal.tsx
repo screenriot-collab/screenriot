@@ -69,6 +69,13 @@ export function Step5Legal({
           <span className="mt-0.5 text-xs text-screenriot-muted">{STEP_5_CHAIN_OF_TITLE.format}</span>
           <span className="mt-2 rounded bg-white/10 px-3 py-1.5 text-xs text-white">Choose File</span>
         </label>
+        {step5.chainOfTitleFileName && !files.chainOfTitle && (
+          <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-400">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={IMAGES.icons.checkVerified} alt="" width={14} height={14} className="h-3.5 w-3.5" />
+            Already uploaded - choose a new file only to replace it.
+          </p>
+        )}
       </div>
 
       {/* Legal Agreements */}
