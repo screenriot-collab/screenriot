@@ -1,13 +1,12 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getFilmDetailMock } from '@/markup/film-detail';
-import { fetchFilmById, fetchFilmPageBySlug } from '@/lib/films-api';
+import { fetchFilmPageBySlug } from '@/lib/films-api';
 import { apiFilmToFilmDetailMock } from '@/lib/film-page-mapper';
 import { FilmDetailWithPropose } from '@/components/film-propose/FilmDetailWithPropose';
+import { resolveCanPropose } from '@/lib/film-access';
 
 type PageProps = { params: Promise<{ slug: string }> };
-
-const PUBLISHED_STATUSES = ['approved', 'fundraising', 'funded', 'closed'] as const;
 
 export default async function FilmPage({ params }: PageProps) {
   const { slug } = await params;
@@ -17,25 +16,11 @@ export default async function FilmPage({ params }: PageProps) {
   const defaultMock = getFilmDetailMock(slug);
   const film = apiFilm ? apiFilmToFilmDetailMock(apiFilm, defaultMock) : defaultMock;
 
-  let canPropose = false;
-  let accessToken: string | undefined;
-
-  if (
-    session?.user?.role === 'filmmaker' &&
-    apiFilm?.id &&
-    (session as { accessToken?: string }).accessToken
-  ) {
-    accessToken = (session as { accessToken?: string }).accessToken;
-    try {
-      const owned = await fetchFilmById(apiFilm.id, accessToken);
-      canPropose =
-        owned !== null &&
-        PUBLISHED_STATUSES.includes(owned.status as (typeof PUBLISHED_STATUSES)[number]) &&
-        Boolean(owned.pagePublished);
-    } catch {
-      canPropose = false;
-    }
-  }
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  const canPropose =
+    session?.user?.role === 'filmmaker' && apiFilm?.id && accessToken
+      ? await resolveCanPropose(apiFilm.id, accessToken)
+      : false;
 
   return (
     <FilmDetailWithPropose

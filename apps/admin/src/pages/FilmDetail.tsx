@@ -153,10 +153,8 @@ export default function FilmDetail() {
                       <span>{c.actorName || '—'}</span>
                       <span className="text-gray-500">
                         {' '}
-                        · {(c as { character?: string }).character || c.role || '—'}
-                        {(c as { tier?: string }).tier
-                          ? ` (${(c as { tier?: string }).tier})`
-                          : ''}
+                        · {c.character || c.role || '—'}
+                        {c.tier ? ` (${c.tier})` : ''}
                       </span>
                       <span className="text-gray-600"> ({c.actorEmail || '—'})</span>
                     </li>
@@ -190,7 +188,7 @@ export default function FilmDetail() {
                       <span>{w.actorName || '—'}</span>
                       <span className="text-gray-500">
                         {' '}
-                        · {w.character || (w as { role?: string }).role || '—'}
+                        · {w.character || w.role || '—'}
                         {w.tier ? ` (${w.tier})` : ''}
                       </span>
                       {w.status === 'verified' && (

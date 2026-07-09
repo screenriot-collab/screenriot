@@ -32,8 +32,8 @@ export function NewContributionForm({ filmId, accessToken }: NewContributionForm
       await createContribution({ filmId, changes, comment }, accessToken);
       router.push('/dashboard/contributions');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       setLoading(false);
     }
   };

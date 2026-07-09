@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  getFilmsWithInvestments,
-  getFilmDonations,
-  type FilmWithInvestments,
-  type FilmDonationRow,
-} from '@/lib/api';
+import { getFilmsWithInvestments, getFilmDonations } from '@/lib/api';
+import type { FilmWithInvestments, FilmDonationRow } from '@/types/investments';
 
 export function useFilmsWithInvestments() {
   const [films, setFilms] = useState<FilmWithInvestments[]>([]);
