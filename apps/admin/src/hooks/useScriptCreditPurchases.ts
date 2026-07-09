@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  fulfillScriptCreditsFromSession,
-  getScriptCreditPurchases,
-  type ScriptCreditPurchaseRow,
-} from '@/lib/api';
+import { fulfillScriptCreditsFromSession, getScriptCreditPurchases } from '@/lib/api';
+import type { ScriptCreditPurchaseRow } from '@/types/script-credits';
 
 export function useScriptCreditPurchases() {
   const [purchases, setPurchases] = useState<ScriptCreditPurchaseRow[]>([]);

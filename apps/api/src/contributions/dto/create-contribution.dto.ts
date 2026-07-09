@@ -10,7 +10,7 @@ export class CreateContributionDto {
   @ApiProperty({ description: 'The proposed changes to the film page content' })
   @IsObject()
   @IsNotEmpty()
-  changes: Record<string, any>;
+  changes: Record<string, unknown>;
 
   @ApiPropertyOptional({ description: 'Optional comment from the filmmaker' })
   @IsString()

@@ -6,8 +6,10 @@ node_modules/
 .env.local
 .env.*.local
 
-# Cursor / local-only config
-.cursor/
+# Editor / local-only config
+.claude/
+CLAUDE.md
+CLAUDE.local.md
 
 # Build / cache
 dist/

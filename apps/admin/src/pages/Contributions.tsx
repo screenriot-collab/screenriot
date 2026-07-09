@@ -2,6 +2,7 @@ import { useState, Fragment } from 'react';
 import { useContributions } from '@/hooks/useContributions';
 import type { AdminContribution } from '@/types/contributions';
 import { ContributionRedline } from '@/components/contributions/ContributionRedline';
+import { Pagination } from '@/components/ui/Pagination';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -23,11 +24,11 @@ function formatDate(iso: string): string {
 export default function Contributions() {
   const {
     contributions,
-    total,
     page,
     totalPages,
     loading,
     error,
+    actionError,
     status,
     search,
     setPage,
@@ -54,10 +55,7 @@ export default function Contributions() {
   }
 
   function onRejectSubmit(c: AdminContribution) {
-    if (!rejectComment.trim()) {
-      alert('Please provide a reason for rejection.');
-      return;
-    }
+    if (!rejectComment.trim()) return;
     handleReject(c.id, rejectComment);
     setRejectingId(null);
     setRejectComment('');
@@ -73,6 +71,11 @@ export default function Contributions() {
       {error && (
         <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400" role="alert">
           {error}
+        </p>
+      )}
+      {actionError && (
+        <p className="mt-2 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400" role="alert">
+          {actionError}
         </p>
       )}
 
@@ -237,31 +240,7 @@ export default function Contributions() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-400">
-          <span>
-            Page {page} of {totalPages} ({total} total)
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="rounded border border-white/10 px-2 py-1 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="rounded border border-white/10 px-2 py-1 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
     </>
   );
 }

@@ -1,5 +1,7 @@
-import { IsOptional, IsString, IsEmail, IsEnum, MaxLength, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsEmail, IsIn, MaxLength, IsDateString } from 'class-validator';
 import { UserRole } from '.prisma/client';
+
+const SITE_ROLES: UserRole[] = ['fan' as UserRole, 'filmmaker' as UserRole];
 
 export class UpdateSiteUserDto {
   @IsOptional()
@@ -46,6 +48,6 @@ export class UpdateSiteUserDto {
   bio?: string;
 
   @IsOptional()
-  @IsEnum(UserRole)
+  @IsIn(SITE_ROLES)
   role?: UserRole;
 }

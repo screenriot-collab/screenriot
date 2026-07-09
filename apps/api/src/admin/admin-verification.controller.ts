@@ -18,6 +18,7 @@ import {
   ReviewVerificationDto,
   ReviewDocumentDto,
 } from './dto/review-verification.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @ApiTags('admin-verification')
 @Controller('admin/verifications')
@@ -30,14 +31,13 @@ export class AdminVerificationController {
 
   @Get()
   list(
+    @Query() pagination: PaginationQueryDto,
     @Query('status') status?: VerificationStatus,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
   ) {
     return this.adminVerificationService.list(
       status,
-      page ? Number(page) : 1,
-      limit ? Number(limit) : 20,
+      pagination.page ?? 1,
+      pagination.limit ?? 20,
     );
   }
 

@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Prisma } from '.prisma/client';
+import { Prisma, ContributionStatus } from '.prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
-import { ContributionStatus } from '.prisma/client';
 import { applyContributionPatches } from '../contributions/contribution-patches.util';
 
 @Injectable()
@@ -13,7 +12,7 @@ export class AdminContributionsService {
   ) {}
 
   async findAll(page = 1, limit = 20, status?: string, search?: string) {
-    const where: any = {};
+    const where: Prisma.FilmContributionWhereInput = {};
     if (status) {
       where.status = status as ContributionStatus;
     }

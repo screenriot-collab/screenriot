@@ -3,7 +3,7 @@ import type {
   CastingSuggestionRow as CastingSuggestionRowType,
   CastingSuggestionStatus,
   UpdateCastingSuggestionPayload,
-} from '@/lib/api';
+} from '@/types/casting-suggestions';
 import { StatusPill, type StatusVariant } from '@/components/ui/StatusPill';
 
 const STATUS_OPTIONS = [

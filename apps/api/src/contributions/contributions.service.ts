@@ -1,8 +1,9 @@
+import { randomInt } from 'crypto';
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateContributionDto } from './dto/create-contribution.dto';
-import { ContributionStatus } from '.prisma/client';
+import { ContributionStatus, Prisma } from '.prisma/client';
 
 @Injectable()
 export class ContributionsService {
@@ -49,7 +50,7 @@ export class ContributionsService {
         number,
         filmId: dto.filmId,
         userId,
-        changes: dto.changes,
+        changes: dto.changes as Prisma.InputJsonValue,
         comment: dto.comment,
         status: ContributionStatus.pending,
       },
@@ -95,7 +96,7 @@ export class ContributionsService {
   private generateNumber(): string {
     const now = new Date();
     const datePart = now.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
-    const randomPart = Math.floor(100000 + Math.random() * 900000); // 6 digits
+    const randomPart = randomInt(100000, 1000000);
     return `${datePart}-${randomPart}`;
   }
 }

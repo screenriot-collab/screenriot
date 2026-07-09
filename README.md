@@ -36,14 +36,16 @@ After startup:
 
 ## GitHub & repository
 
-- The project lives in a GitHub **Organization** repository (see `docs/DEPLOYMENT_DISCUSSION.md`, section 1).  
+- The project lives in a GitHub **Organization** repository under the `screenriot-collab` account (see `docs/DEPLOYMENT_DISCUSSION.md`, section 1).
 - The following **local-only** files are not committed and stay on the developer machine:
-  - `.cursor/` — Cursor IDE rules and settings,
+  - `.claude/` — Claude Code local settings,
+  - `CLAUDE.md` (and `apps/*/CLAUDE.md`) — Claude Code project instructions,
   - `docs/` — architecture notes, deployment discussion, work plan.
 - Main branches:
   - `dev` — main development branch (CI: lint + build),
   - `stage` — staging environment (automatic deploy),
   - `prod` — production (protected, deploy to production only).
+- Workflow: new work happens on a `feature/<short-description>` branch off `dev`, opened as a PR into `dev` once CI is green.
 
 Initial push:
 
@@ -109,7 +111,7 @@ For full functionality and deployment you will need:
 - **Accounts for external services** (used in CI/CD and environments):
   - GitHub (organization + private repo),
   - Vercel (web + admin),
-  - Railway (api),
+  - Render (api),
   - Neon (PostgreSQL),
   - Cloudflare R2 (media),
   - Mailtrap / SendGrid / SES (email),

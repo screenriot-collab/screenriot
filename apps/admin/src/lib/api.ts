@@ -7,6 +7,15 @@ import type {
 } from '@/types/films';
 import type { SiteUsersListResponse, SiteUserDetail, VerificationDocument } from '@/types/site-users';
 import type { DashboardStats } from '@/types/dashboard';
+import type { ContributionsListResponse } from '@/types/contributions';
+import type { FilmWithInvestments, FilmDonationRow } from '@/types/investments';
+import type { ScriptCreditPurchaseRow } from '@/types/script-credits';
+import type { SubmissionFeePaymentRow } from '@/types/submission-fees';
+import type {
+  CastingSuggestionRow,
+  CastingSuggestionFilmSummary,
+  UpdateCastingSuggestionPayload,
+} from '@/types/casting-suggestions';
 
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
 
@@ -262,25 +271,6 @@ export async function reviewDocument(
 
 // --- Reports: Films with investments ---
 
-export interface FilmWithInvestments {
-  filmId: string;
-  title: string;
-  slug: string;
-  status: string;
-  totalRaised: number;
-  investorsCount: number;
-  lastDonationAt: string | null;
-}
-
-export interface FilmDonationRow {
-  id: string;
-  userId: string;
-  amount: number;
-  status: string;
-  createdAt: string;
-  userEmail?: string;
-}
-
 export async function getFilmsWithInvestments(params?: {
   status?: string;
   page?: number;
@@ -316,16 +306,6 @@ export async function fulfillDonationFromStripe(sessionId: string): Promise<{
 
 // --- Script credit purchases ---
 
-export interface ScriptCreditPurchaseRow {
-  id: string;
-  userId: string;
-  userEmail: string;
-  credits: number;
-  stripeSessionId: string;
-  createdAt: string;
-  amountUsd: number;
-}
-
 export async function getScriptCreditPurchases(params?: {
   search?: string;
   page?: number;
@@ -355,17 +335,6 @@ export async function fulfillScriptCreditsFromSession(sessionId: string): Promis
 }
 
 // --- Submission fee payments ---
-
-export interface SubmissionFeePaymentRow {
-  id: string;
-  filmId: string;
-  filmTitle: string;
-  userId: string;
-  userEmail: string;
-  stripeSessionId: string;
-  createdAt: string;
-  amountUsd: number;
-}
 
 export async function getSubmissionFeePayments(params?: {
   search?: string;
@@ -398,7 +367,6 @@ export async function fulfillSubmissionFeeFromSession(sessionId: string): Promis
 }
 
 // --- Contributions ---
-import type { ContributionsListResponse } from '@/types/contributions';
 
 export async function listContributions(params?: {
   status?: string;
@@ -429,31 +397,6 @@ export async function rejectContribution(id: string, adminComment: string): Prom
 }
 
 // --- Casting suggestions ---
-
-export type CastingSuggestionStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected';
-
-export interface CastingSuggestionRow {
-  id: string;
-  filmId: string;
-  filmTitle: string;
-  filmSlug: string;
-  userId: string;
-  userEmail: string;
-  actorName: string;
-  roleHint: string | null;
-  status: CastingSuggestionStatus;
-  adminNote: string | null;
-  createdAt: string;
-}
-
-export interface CastingSuggestionFilmSummary {
-  filmId: string;
-  filmTitle: string;
-  filmSlug: string;
-  total: number;
-  pending: number;
-  lastSubmittedAt: string;
-}
 
 export async function getCastingSuggestionFilms(params?: {
   status?: string;
@@ -486,13 +429,6 @@ export async function getCastingSuggestions(params: {
   return api<{ suggestions: CastingSuggestionRow[]; total: number }>(
     `/admin/casting-suggestions?${q.toString()}`,
   );
-}
-
-export interface UpdateCastingSuggestionPayload {
-  status: CastingSuggestionStatus;
-  adminNote?: string;
-  actorName?: string;
-  roleHint?: string;
 }
 
 export async function updateCastingSuggestion(

@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  fulfillSubmissionFeeFromSession,
-  getSubmissionFeePayments,
-  type SubmissionFeePaymentRow,
-} from '@/lib/api';
+import { fulfillSubmissionFeeFromSession, getSubmissionFeePayments } from '@/lib/api';
+import type { SubmissionFeePaymentRow } from '@/types/submission-fees';
 
 export function useSubmissionFeePayments() {
   const [payments, setPayments] = useState<SubmissionFeePaymentRow[]>([]);

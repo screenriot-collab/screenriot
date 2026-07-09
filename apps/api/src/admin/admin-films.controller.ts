@@ -25,8 +25,7 @@ import { ListFilmsQueryDto } from './dto/list-films.dto';
 import { UpdateFilmReviewDto } from './dto/update-film-review.dto';
 import { UpdateFilmPageDto } from './dto/update-film-page.dto';
 import { AdminFilmsService } from './admin-films.service';
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+import { MAX_FILE_SIZE } from '../common/constants';
 
 @ApiTags('admin-films')
 @Controller('admin/films')

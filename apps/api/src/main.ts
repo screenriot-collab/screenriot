@@ -20,7 +20,22 @@ async function bootstrap() {
     if (req.originalUrl === '/donations/webhook') return next();
     bodyParser.json()(req, res, next);
   });
-  app.enableCors();
+  const allowedOrigins = [
+    'https://screenriot-web.vercel.app',
+    'https://screenriot-admin.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3002',
+  ];
+  app.enableCors({
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const config = new DocumentBuilder()
