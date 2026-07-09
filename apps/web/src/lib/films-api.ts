@@ -429,7 +429,17 @@ export async function uploadFilmFile(
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || `Upload failed: ${res.status}`);
+    let message = '';
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (parsed && typeof parsed === 'object' && 'message' in parsed) {
+        const m = (parsed as { message: unknown }).message;
+        message = Array.isArray(m) ? m.join(' ') : String(m ?? '');
+      }
+    } catch {
+      message = text;
+    }
+    throw new Error(message || `Upload failed: ${res.status}`);
   }
   return res.json();
 }

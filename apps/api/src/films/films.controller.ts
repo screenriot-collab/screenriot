@@ -38,7 +38,15 @@ import { CreateCastingSuggestionDto } from './dto/create-casting-suggestion.dto'
 import { FilmDiscussionService } from './film-discussion.service';
 import { ListDiscussionQueryDto } from './dto/list-discussion.dto';
 import { CreateDiscussionCommentDto } from './dto/create-discussion-comment.dto';
-import { MAX_FILE_SIZE } from '../common/constants';
+import { FILE_SLOT_RULES } from './films.service';
+
+/**
+ * Absolute ceiling for this multi-slot endpoint. Kept above the largest per-slot limit so
+ * FilmsService's clear, slot-specific size message is what the client sees in normal cases -
+ * this pipe-level check is just a hard backstop against absurdly large uploads.
+ */
+const MAX_UPLOAD_SIZE_BYTES =
+  Math.max(...Object.values(FILE_SLOT_RULES).map((rule) => rule.maxSizeBytes)) + 10 * 1024 * 1024;
 
 @ApiTags('films')
 @Controller('films')
@@ -254,7 +262,7 @@ export class FilmsController {
     @Param('slot') slot: string,
     @UploadedFile(
       new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE })],
+        validators: [new MaxFileSizeValidator({ maxSize: MAX_UPLOAD_SIZE_BYTES })],
         fileIsRequired: true,
       }),
     )

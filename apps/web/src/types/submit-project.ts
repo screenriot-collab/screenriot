@@ -54,6 +54,7 @@ export type Step5Files = {
 export type UploadWarning = {
   slot: 'screenplay' | 'poster' | 'teaser' | 'chain-of-title';
   fileName: string;
+  reason?: string;
 };
 
 export type ReviewComments = {

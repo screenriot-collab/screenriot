@@ -118,6 +118,7 @@ export function SubmitProjectWizard({
               error={wizard.stepErrors[2] ?? null}
               onFilesChange={wizard.setStep2Files}
               onClearError={() => wizard.setStepError(2, null)}
+              onFileError={(message) => wizard.setStepError(2, message)}
             />
           </>
         )}
@@ -166,6 +167,7 @@ export function SubmitProjectWizard({
               onSetStep5={wizard.setStep5}
               onFilesChange={wizard.setStep5Files}
               onClearError={() => wizard.setStepError(5, null)}
+              onFileError={(message) => wizard.setStepError(5, message)}
               onSaveAndPay={wizard.handleSaveAndPay}
             />
           </>

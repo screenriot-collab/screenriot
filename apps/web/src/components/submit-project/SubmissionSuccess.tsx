@@ -49,6 +49,7 @@ export function SubmissionSuccess({
               <li key={`${w.slot}:${w.fileName}`}>
                 {SLOT_LABELS[w.slot]} —{' '}
                 <span className="text-white/90">{w.fileName}</span>
+                {w.reason && <span className="block text-xs text-amber-300/90">{w.reason}</span>}
               </li>
             ))}
           </ul>

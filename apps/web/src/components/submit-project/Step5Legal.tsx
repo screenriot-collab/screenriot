@@ -23,6 +23,7 @@ interface Step5Props {
   onSetStep5: (update: Partial<Step5Data>) => void;
   onFilesChange: React.Dispatch<React.SetStateAction<Step5Files>>;
   onClearError: () => void;
+  onFileError: (message: string) => void;
   onSaveAndPay: () => void;
 }
 
@@ -37,6 +38,7 @@ export function Step5Legal({
   onSetStep5,
   onFilesChange,
   onClearError,
+  onFileError,
   onSaveAndPay,
 }: Step5Props) {
   return (
@@ -61,7 +63,27 @@ export function Step5Legal({
             className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) onFilesChange((prev) => ({ ...prev, chainOfTitle: f }));
+              if (!f) {
+                onClearError();
+                return;
+              }
+              if (f.size > STEP_5_CHAIN_OF_TITLE.maxSizeBytes) {
+                const maxMb = Math.round(STEP_5_CHAIN_OF_TITLE.maxSizeBytes / (1024 * 1024));
+                const gotMb = (f.size / (1024 * 1024)).toFixed(1);
+                onFileError(
+                  `${STEP_5_CHAIN_OF_TITLE.label}: file is too large (${gotMb}MB). Maximum allowed size is ${maxMb}MB.`,
+                );
+                e.target.value = '';
+                return;
+              }
+              if (!(STEP_5_CHAIN_OF_TITLE.mimeTypes as readonly string[]).includes(f.type)) {
+                onFileError(
+                  `${STEP_5_CHAIN_OF_TITLE.label}: must be ${STEP_5_CHAIN_OF_TITLE.mimeTypes.join(' or ')} (selected file is ${f.type || 'an unrecognized format'}).`,
+                );
+                e.target.value = '';
+                return;
+              }
+              onFilesChange((prev) => ({ ...prev, chainOfTitle: f }));
               onClearError();
             }}
             aria-label="Upload copyright documentation"

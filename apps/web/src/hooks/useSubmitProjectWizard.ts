@@ -335,7 +335,8 @@ export function useSubmitProjectWizard({
         await uploadFilmFile(targetId, slot, file, accessToken);
       } catch (err: unknown) {
         console.error(`[uploadFilmFile] slot=${slot} file=${file.name}`, err);
-        failed.push({ slot, fileName: file.name });
+        const reason = err instanceof Error ? err.message : undefined;
+        failed.push({ slot, fileName: file.name, reason });
       }
     }
     if (failed.length > 0) setUploadWarnings(failed);
