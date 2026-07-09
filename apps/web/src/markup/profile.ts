@@ -179,6 +179,12 @@ export type VerificationData = {
 };
 
 export const VERIFICATION_ACCEPTED_FORMATS = '.pdf,.jpg,.jpeg,.png,.webp';
+export const VERIFICATION_ACCEPTED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+];
 export const VERIFICATION_MAX_FILE_SIZE_MB = 10;
 
 type DocRequirement = {

@@ -9,6 +9,7 @@ import {
   FILMMAKER_DOCUMENT_REQUIREMENTS,
   FILMMAKER_PROFESSIONAL_DOCS_NOTE,
   VERIFICATION_ACCEPTED_FORMATS,
+  VERIFICATION_ACCEPTED_MIME_TYPES,
   VERIFICATION_MAX_FILE_SIZE_MB,
   type UserRole,
   type VerificationData,
@@ -190,6 +191,10 @@ export function VerificationSection({ role, verification }: VerificationSectionP
   async function handleFileSelect(type: VerificationDocType, file: File | undefined) {
     if (!file) return;
 
+    if (!VERIFICATION_ACCEPTED_MIME_TYPES.includes(file.type)) {
+      alert('Unsupported file type. Please upload a PDF, JPG, PNG, or WebP file.');
+      return;
+    }
     if (file.size > VERIFICATION_MAX_FILE_SIZE_MB * 1024 * 1024) {
       alert(`File too large. Maximum size is ${VERIFICATION_MAX_FILE_SIZE_MB} MB.`);
       return;
