@@ -79,6 +79,8 @@ export const STEP_2_UPLOADS = [
     required: true,
     format: 'PDF format, maximum 50MB.',
     accept: '.pdf',
+    maxSizeBytes: 50 * 1024 * 1024,
+    mimeTypes: ['application/pdf'],
   },
   {
     id: 'poster',
@@ -86,13 +88,17 @@ export const STEP_2_UPLOADS = [
     required: false,
     format: 'JPG or PNG, minimum 1080x1080px.',
     accept: '.jpg,.jpeg,.png',
+    maxSizeBytes: 10 * 1024 * 1024,
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
   },
   {
     id: 'video',
     label: 'Upload Teaser/Pitch Video (Optional)',
     required: false,
-    format: 'MP4 format, maximum 500MB.',
+    format: 'MP4 format, maximum 100MB.',
     accept: '.mp4',
+    maxSizeBytes: 100 * 1024 * 1024,
+    mimeTypes: ['video/mp4'],
   },
 ] as const;
 
@@ -193,6 +199,8 @@ export const STEP_5_CHAIN_OF_TITLE = {
   buttonText: 'Upload Copyright Documentation',
   format: 'PDF format, maximum 10MB',
   accept: '.pdf',
+  maxSizeBytes: 10 * 1024 * 1024,
+  mimeTypes: ['application/pdf'],
 } as const;
 
 export const STEP_5_LEGAL = {

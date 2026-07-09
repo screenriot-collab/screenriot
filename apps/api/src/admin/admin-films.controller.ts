@@ -25,7 +25,15 @@ import { ListFilmsQueryDto } from './dto/list-films.dto';
 import { UpdateFilmReviewDto } from './dto/update-film-review.dto';
 import { UpdateFilmPageDto } from './dto/update-film-page.dto';
 import { AdminFilmsService } from './admin-films.service';
-import { MAX_FILE_SIZE } from '../common/constants';
+import { FILE_SLOT_RULES } from '../films/films.service';
+
+/**
+ * Absolute ceiling for this multi-slot endpoint. Kept above the largest per-slot limit so
+ * AdminFilmsService's clear, slot-specific size message is what the client sees in normal cases -
+ * this pipe-level check is just a hard backstop against absurdly large uploads.
+ */
+const MAX_UPLOAD_SIZE_BYTES =
+  Math.max(...Object.values(FILE_SLOT_RULES).map((rule) => rule.maxSizeBytes)) + 10 * 1024 * 1024;
 
 @ApiTags('admin-films')
 @Controller('admin/films')
@@ -51,7 +59,7 @@ export class AdminFilmsController {
     @Param('slot') slot: string,
     @UploadedFile(
       new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE })],
+        validators: [new MaxFileSizeValidator({ maxSize: MAX_UPLOAD_SIZE_BYTES })],
         fileIsRequired: true,
       }),
     )

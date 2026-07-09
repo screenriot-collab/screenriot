@@ -135,9 +135,21 @@ export default function FilmDetail() {
           {/* Step 2 — Script & Materials */}
           <StepCard step={2} title="Script & materials" comment={comments.step2} onCommentChange={(v) => updateComment('step2', v)} disabled={actionLoading}>
             <ul className="space-y-1.5">
-              <FileRow label="Screenplay" file={detail.files.screenplay} />
-              <FileRow label="Poster" file={detail.files.poster} />
-              <FileRow label="Teaser" file={detail.files.teaser} />
+              <FileRow
+                label="Screenplay"
+                file={detail.files.screenplay}
+                missingHint="Required: PDF format, maximum 50MB"
+              />
+              <FileRow
+                label="Poster"
+                file={detail.files.poster}
+                missingHint="JPG, PNG, or WEBP, maximum 10MB"
+              />
+              <FileRow
+                label="Teaser"
+                file={detail.files.teaser}
+                missingHint="MP4 format, maximum 100MB"
+              />
             </ul>
           </StepCard>
 
@@ -238,7 +250,11 @@ export default function FilmDetail() {
           {/* Step 5 — Legal & Payment */}
           <StepCard step={5} title="Legal & Payment" comment={comments.step5} onCommentChange={(v) => updateComment('step5', v)} disabled={actionLoading}>
             <ul className="space-y-1.5">
-              <FileRow label="Chain of Title" file={detail.files.chainOfTitle} />
+              <FileRow
+                label="Chain of Title"
+                file={detail.files.chainOfTitle}
+                missingHint="Required: PDF format, maximum 10MB"
+              />
             </ul>
             <div className="mt-3 flex items-center gap-2 text-sm">
               <span className="text-gray-500">Submission fee:</span>
