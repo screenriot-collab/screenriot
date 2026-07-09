@@ -331,7 +331,8 @@ export function useSubmitProjectWizard({
     for (const { slot, file } of slots) {
       try {
         await uploadFilmFile(targetId, slot, file, accessToken);
-      } catch {
+      } catch (err: unknown) {
+        console.error(`[uploadFilmFile] slot=${slot} file=${file.name}`, err);
         failed.push({ slot, fileName: file.name });
       }
     }

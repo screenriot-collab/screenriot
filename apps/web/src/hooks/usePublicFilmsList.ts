@@ -19,21 +19,29 @@ export type PublicFilmCardView = PlaceholderFilm & {
 type UsePublicFilmsListOptions = {
   limit: number;
   initialPage?: number;
+  initialGenre?: string;
+  initialSearch?: string;
+  initialFilms?: PublicFilmCardView[];
+  initialTotal?: number;
   genreOptions: readonly string[];
 };
 
 export function usePublicFilmsList({
   limit,
   initialPage = 1,
+  initialGenre,
+  initialSearch = '',
+  initialFilms,
+  initialTotal,
   genreOptions,
 }: UsePublicFilmsListOptions) {
-  const [genre, setGenre] = useState<string>(genreOptions[0] ?? 'All');
+  const [genre, setGenre] = useState<string>(initialGenre ?? genreOptions[0] ?? 'All');
   const [page, setPage] = useState(initialPage);
-  const [search, setSearch] = useState('');
-  const [submittedSearch, setSubmittedSearch] = useState('');
-  const [films, setFilms] = useState<PublicFilmCardView[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState(initialSearch);
+  const [submittedSearch, setSubmittedSearch] = useState(initialSearch);
+  const [films, setFilms] = useState<PublicFilmCardView[]>(initialFilms ?? []);
+  const [total, setTotal] = useState(initialTotal ?? 0);
+  const [loading, setLoading] = useState(initialFilms === undefined);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
