@@ -119,7 +119,7 @@ export const STEP_3_CAST = {
   actorEmail: { label: 'Email Confirmation', placeholder: 'actor@email.com' },
   characterDescription: {
     label: 'Character Description',
-    placeholder: 'Brief description for the film page (optional)',
+    placeholder: 'Brief description of this character for the film page',
   },
   addButton: '+ Add Another Cast Member',
 } as const;

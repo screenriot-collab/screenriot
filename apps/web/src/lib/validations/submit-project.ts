@@ -53,11 +53,15 @@ export const step3Schema = z
         (c) =>
           (c.actorName ?? '').trim() &&
           (c.character ?? '').trim() &&
-          (c.actorEmail ?? '').trim(),
+          (c.actorEmail ?? '').trim() &&
+          (c.characterDescription ?? '').trim(),
       );
       return data.cast.length >= 1 && hasValidCast;
     },
-    { message: 'Fill actor name, character, and email for at least one cast member', path: ['cast'] },
+    {
+      message: 'Fill actor name, character, email, and character description for at least one cast member',
+      path: ['cast'],
+    },
   )
   .refine(
     (data) => {

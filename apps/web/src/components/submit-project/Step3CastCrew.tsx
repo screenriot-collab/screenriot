@@ -171,7 +171,7 @@ export function Step3CastCrew({
                 htmlFor={`cast-desc-${i}`}
                 className="block text-xs font-medium text-screenriot-muted"
               >
-                {STEP_3_CAST.characterDescription.label}
+                {STEP_3_CAST.characterDescription.label} *
               </label>
               <textarea
                 id={`cast-desc-${i}`}
