@@ -13,9 +13,34 @@ interface Step2Props {
   error: string | null;
   onFilesChange: React.Dispatch<React.SetStateAction<Step2Files>>;
   onClearError: () => void;
+  onFileError: (message: string) => void;
 }
 
-export function Step2Materials({ form, files, error, onFilesChange, onClearError }: Step2Props) {
+/** Rejects the file immediately (before it's even accepted into wizard state) if it fails the
+ * slot's size/format rules, so the filmmaker finds out right away instead of at final submit. */
+function validateSelectedFile(
+  file: File,
+  upload: { label: string; maxSizeBytes: number; mimeTypes: readonly string[] },
+): string | null {
+  if (file.size > upload.maxSizeBytes) {
+    const maxMb = Math.round(upload.maxSizeBytes / (1024 * 1024));
+    const gotMb = (file.size / (1024 * 1024)).toFixed(1);
+    return `${upload.label}: file is too large (${gotMb}MB). Maximum allowed size is ${maxMb}MB.`;
+  }
+  if (!upload.mimeTypes.includes(file.type)) {
+    return `${upload.label}: must be ${upload.mimeTypes.join(' or ')} (selected file is ${file.type || 'an unrecognized format'}).`;
+  }
+  return null;
+}
+
+export function Step2Materials({
+  form,
+  files,
+  error,
+  onFilesChange,
+  onClearError,
+  onFileError,
+}: Step2Props) {
   const step2Values = form.watch('step2');
 
   return (
@@ -72,7 +97,19 @@ export function Step2Materials({ form, files, error, onFilesChange, onClearError
                 accept={upload.accept}
                 className="sr-only"
                 onChange={(e) => {
-                  setFile(e.target.files?.[0] ?? null);
+                  const selected = e.target.files?.[0] ?? null;
+                  if (!selected) {
+                    setFile(null);
+                    onClearError();
+                    return;
+                  }
+                  const validationError = validateSelectedFile(selected, upload);
+                  if (validationError) {
+                    onFileError(validationError);
+                    e.target.value = '';
+                    return;
+                  }
+                  setFile(selected);
                   onClearError();
                 }}
               />
@@ -91,12 +128,16 @@ export function Step2Materials({ form, files, error, onFilesChange, onClearError
               {displayName && (
                 <p className="mt-2 max-w-full truncate text-xs text-screenriot-muted">
                   {displayName}
-                  {serverFileName && !file && (
-                    <span className="ml-1 text-screenriot-muted/80">(from server)</span>
-                  )}
                 </p>
               )}
             </div>
+            {serverFileName && !file && (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-400">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={IMAGES.icons.checkVerified} alt="" width={14} height={14} className="h-3.5 w-3.5" />
+                Already uploaded - choose a new file only to replace it.
+              </p>
+            )}
           </div>
         );
       })}

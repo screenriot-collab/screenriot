@@ -9,6 +9,7 @@ import {
   FILMMAKER_DOCUMENT_REQUIREMENTS,
   FILMMAKER_PROFESSIONAL_DOCS_NOTE,
   VERIFICATION_ACCEPTED_FORMATS,
+  VERIFICATION_ACCEPTED_MIME_TYPES,
   VERIFICATION_MAX_FILE_SIZE_MB,
   type UserRole,
   type VerificationData,
@@ -190,6 +191,10 @@ export function VerificationSection({ role, verification }: VerificationSectionP
   async function handleFileSelect(type: VerificationDocType, file: File | undefined) {
     if (!file) return;
 
+    if (!VERIFICATION_ACCEPTED_MIME_TYPES.includes(file.type)) {
+      alert('Unsupported file type. Please upload a PDF, JPG, PNG, or WebP file.');
+      return;
+    }
     if (file.size > VERIFICATION_MAX_FILE_SIZE_MB * 1024 * 1024) {
       alert(`File too large. Maximum size is ${VERIFICATION_MAX_FILE_SIZE_MB} MB.`);
       return;
@@ -365,6 +370,11 @@ export function VerificationSection({ role, verification }: VerificationSectionP
             {docRequirements.map((req) => {
               const existing = getDocForType(req.type);
               const isUploading = uploading === req.type;
+              /** Admin can reject a single document without rejecting the whole
+               * verification (e.g. everything else is fine, just this one needs
+               * redoing) - allow re-upload for that document even if the overall
+               * status is "pending" or "verified". */
+              const canReuploadThis = canUpload || existing?.status === 'rejected';
 
               return (
                 <li
@@ -430,7 +440,7 @@ export function VerificationSection({ role, verification }: VerificationSectionP
                     <p className="mt-2 text-xs text-screenriot-accent-blue">Uploading…</p>
                   )}
 
-                  {canUpload && !isUploading && (
+                  {canReuploadThis && !isUploading && (
                     <div className="mt-3">
                       <input
                         type="file"

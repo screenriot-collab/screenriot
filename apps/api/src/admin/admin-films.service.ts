@@ -10,6 +10,7 @@ import {
   wishListToCastingVoteOptions,
   type Step3Shape,
 } from '../films/cast-step3.util';
+import { FILE_SLOT_RULES, type FilmFileSlot } from '../films/films.service';
 
 const PUBLISHED_STATUSES: FilmStatus[] = [
   FilmStatus.approved,
@@ -189,6 +190,20 @@ export class AdminFilmsService {
     if (!film) throw new NotFoundException('Film not found');
     if (!PUBLISHED_STATUSES.includes(film.status)) {
       throw new BadRequestException('Upload only for approved/fundraising/funded/closed films');
+    }
+
+    const rule = FILE_SLOT_RULES[slot as FilmFileSlot];
+    if (file.size > rule.maxSizeBytes) {
+      const maxMb = Math.round(rule.maxSizeBytes / (1024 * 1024));
+      const gotMb = (file.size / (1024 * 1024)).toFixed(1);
+      throw new BadRequestException(
+        `${rule.label} is too large (${gotMb}MB). Maximum allowed size is ${maxMb}MB.`,
+      );
+    }
+    if (!rule.mimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `${rule.label} must be uploaded as ${rule.mimeTypes.join(' or ')} (received ${file.mimetype}).`,
+      );
     }
 
     const key = `films/${id}/${slot}`;

@@ -60,6 +60,33 @@ import {
 const SLOTS = ['screenplay', 'poster', 'teaser', 'chain-of-title'] as const;
 export type FilmFileSlot = (typeof SLOTS)[number];
 
+/** Per-slot upload limits, matching what the submit-project wizard advertises to filmmakers. */
+export const FILE_SLOT_RULES: Record<
+  FilmFileSlot,
+  { label: string; maxSizeBytes: number; mimeTypes: string[] }
+> = {
+  screenplay: {
+    label: 'Screenplay',
+    maxSizeBytes: 50 * 1024 * 1024,
+    mimeTypes: ['application/pdf'],
+  },
+  poster: {
+    label: 'Poster/Key Art',
+    maxSizeBytes: 10 * 1024 * 1024,
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  },
+  teaser: {
+    label: 'Teaser/Pitch Video',
+    maxSizeBytes: 100 * 1024 * 1024,
+    mimeTypes: ['video/mp4'],
+  },
+  'chain-of-title': {
+    label: 'Chain of Title Documentation',
+    maxSizeBytes: 10 * 1024 * 1024,
+    mimeTypes: ['application/pdf'],
+  },
+};
+
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -627,6 +654,20 @@ export class FilmsService {
     if (film.filmmakerId !== userId) throw new ForbiddenException('Forbidden');
     if (film.status === FilmStatus.approved)
       throw new BadRequestException('Approved film cannot be edited');
+
+    const rule = FILE_SLOT_RULES[slot as FilmFileSlot];
+    if (file.size > rule.maxSizeBytes) {
+      const maxMb = Math.round(rule.maxSizeBytes / (1024 * 1024));
+      const gotMb = (file.size / (1024 * 1024)).toFixed(1);
+      throw new BadRequestException(
+        `${rule.label} is too large (${gotMb}MB). Maximum allowed size is ${maxMb}MB.`,
+      );
+    }
+    if (!rule.mimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `${rule.label} must be uploaded as ${rule.mimeTypes.join(' or ')} (received ${file.mimetype}).`,
+      );
+    }
 
     // Fixed key per slot: overwrite on replace, no duplicate files
     const key = `films/${filmId}/${slot}`;

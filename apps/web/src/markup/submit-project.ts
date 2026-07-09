@@ -14,9 +14,9 @@ export const UPDATE_PROJECT_PAGE = {
 } as const;
 
 export const SUBMIT_SUCCESS = {
-  title: 'Application submitted!',
+  title: 'Project saved!',
   description:
-    'Thank you for submitting your project. After you complete the submission fee payment, our team will review your application within 5 business days. We will contact you with next steps.',
+    'Your project has been saved as a draft. It will not be sent for review until the submission fee is paid - pay now to submit it for review within 5 business days.',
   buttonLabel: 'Go to My Films',
   buttonHref: '/dashboard/films',
 } as const;
@@ -30,8 +30,14 @@ export const UPDATE_SUCCESS = {
 } as const;
 
 export const WIZARD_ACTIONS = {
-  submitButton: 'Submit Project',
+  submitButton: 'Save Project',
   updateButton: 'Update Project',
+} as const;
+
+export const SUBMISSION_FEE_CTA = {
+  title: 'One step left: pay the submission fee',
+  description: 'Your project is saved as a draft. It will not be sent for review until the submission fee is paid.',
+  buttonLabel: 'Pay Submission Fee',
 } as const;
 
 export const SUBMIT_STEPS = [
@@ -73,6 +79,8 @@ export const STEP_2_UPLOADS = [
     required: true,
     format: 'PDF format, maximum 50MB.',
     accept: '.pdf',
+    maxSizeBytes: 50 * 1024 * 1024,
+    mimeTypes: ['application/pdf'],
   },
   {
     id: 'poster',
@@ -80,13 +88,17 @@ export const STEP_2_UPLOADS = [
     required: false,
     format: 'JPG or PNG, minimum 1080x1080px.',
     accept: '.jpg,.jpeg,.png',
+    maxSizeBytes: 10 * 1024 * 1024,
+    mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
   },
   {
     id: 'video',
     label: 'Upload Teaser/Pitch Video (Optional)',
     required: false,
-    format: 'MP4 format, maximum 500MB.',
+    format: 'MP4 format, maximum 100MB.',
     accept: '.mp4',
+    maxSizeBytes: 100 * 1024 * 1024,
+    mimeTypes: ['video/mp4'],
   },
 ] as const;
 
@@ -113,7 +125,7 @@ export const STEP_3_CAST = {
   actorEmail: { label: 'Email Confirmation', placeholder: 'actor@email.com' },
   characterDescription: {
     label: 'Character Description',
-    placeholder: 'Brief description for the film page (optional)',
+    placeholder: 'Brief description of this character for the film page',
   },
   addButton: '+ Add Another Cast Member',
 } as const;
@@ -187,6 +199,8 @@ export const STEP_5_CHAIN_OF_TITLE = {
   buttonText: 'Upload Copyright Documentation',
   format: 'PDF format, maximum 10MB',
   accept: '.pdf',
+  maxSizeBytes: 10 * 1024 * 1024,
+  mimeTypes: ['application/pdf'],
 } as const;
 
 export const STEP_5_LEGAL = {
