@@ -5,6 +5,7 @@ import {
   STEP_5_LEGAL,
   STEP_5_FEE,
   STEP_5_NEXT,
+  SUBMISSION_FEE_CTA,
 } from '@/markup/submit-project';
 import type { SubmitProjectFormData, Step5Files } from '@/types/submit-project';
 import type { UseFormReturn } from 'react-hook-form';
@@ -17,9 +18,12 @@ interface Step5Props {
   files: Step5Files;
   error: string | null;
   submissionFeePaid: boolean;
+  filmId?: string;
+  isSubmitting: boolean;
   onSetStep5: (update: Partial<Step5Data>) => void;
   onFilesChange: React.Dispatch<React.SetStateAction<Step5Files>>;
   onClearError: () => void;
+  onSaveAndPay: () => void;
 }
 
 export function Step5Legal({
@@ -28,9 +32,12 @@ export function Step5Legal({
   files,
   error,
   submissionFeePaid,
+  filmId,
+  isSubmitting,
   onSetStep5,
   onFilesChange,
   onClearError,
+  onSaveAndPay,
 }: Step5Props) {
   return (
     <div className="space-y-8">
@@ -144,6 +151,21 @@ export function Step5Legal({
               </label>
             ))}
           </div>
+          {filmId && (
+            <>
+              <button
+                type="button"
+                onClick={onSaveAndPay}
+                disabled={isSubmitting}
+                className="mt-4 inline-block rounded-lg bg-screenriot-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg disabled:opacity-50"
+              >
+                {isSubmitting ? 'Saving…' : SUBMISSION_FEE_CTA.buttonLabel}
+              </button>
+              <p className="mt-2 text-xs text-screenriot-muted">
+                Saves your latest changes first, then takes you to the payment page.
+              </p>
+            </>
+          )}
         </div>
       )}
 

@@ -100,6 +100,7 @@ export function useSubmitProjectWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [uploadWarnings, setUploadWarnings] = useState<UploadWarning[]>([]);
+  const [submittedFilmId, setSubmittedFilmId] = useState<string | null>(null);
 
   const step1 = form.watch('step1') ?? defaultStep1;
   const step3 = form.watch('step3') ?? initialStep3;
@@ -281,7 +282,8 @@ export function useSubmitProjectWizard({
     return true;
   }
 
-  async function submitProject() {
+  /** Saves the current wizard state (create/update film + upload files) and returns the film id. */
+  async function submitProject(): Promise<string> {
     let targetId = filmId ?? '';
     const v = form.getValues();
     const step1Data = v.step1 ?? defaultStep1;
@@ -318,7 +320,7 @@ export function useSubmitProjectWizard({
       await updateFilm(filmId, body, accessToken);
     }
 
-    if (!targetId) return;
+    if (!targetId) return targetId;
 
     const slots: { slot: UploadWarning['slot']; file: File }[] = [];
     if (step2Files.screenplay) slots.push({ slot: 'screenplay', file: step2Files.screenplay });
@@ -337,7 +339,7 @@ export function useSubmitProjectWizard({
       }
     }
     if (failed.length > 0) setUploadWarnings(failed);
-    setSubmitted(true);
+    return targetId;
   }
 
   function handleNext() {
@@ -354,7 +356,9 @@ export function useSubmitProjectWizard({
       try {
         setIsSubmitting(true);
         setUploadWarnings([]);
-        await submitProject();
+        const targetId = await submitProject();
+        setSubmittedFilmId(targetId || null);
+        setSubmitted(true);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Submission failed';
         const hasId = !!(filmId ?? '');
@@ -364,6 +368,30 @@ export function useSubmitProjectWizard({
             : message,
         );
         if (hasId) router.refresh();
+        setIsSubmitting(false);
+      }
+    })();
+  }
+
+  /** Save the current wizard state first, then go straight to the payment page (never navigates away with unsaved changes). */
+  function handleSaveAndPay() {
+    if (isSubmitting) return;
+    if (!validateCurrentStep()) return;
+
+    setSubmitError(null);
+    void (async () => {
+      try {
+        setIsSubmitting(true);
+        setUploadWarnings([]);
+        const targetId = await submitProject();
+        if (targetId) {
+          router.push(`/dashboard/films/pay?film=${targetId}`);
+          return;
+        }
+        setIsSubmitting(false);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Could not save project';
+        setSubmitError(`${message} Please try again before paying.`);
         setIsSubmitting(false);
       }
     })();
@@ -382,6 +410,7 @@ export function useSubmitProjectWizard({
     isEditMode,
     submissionFeePaid,
     submitted,
+    submittedFilmId,
     isSubmitting,
     submitError,
     uploadWarnings,
@@ -413,6 +442,7 @@ export function useSubmitProjectWizard({
     setStep5,
     setStepError,
     handleNext,
+    handleSaveAndPay,
     handlePrevious,
   };
 }
