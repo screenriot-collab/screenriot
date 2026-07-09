@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { S3Service } from '../s3/s3.service';
-import { VerificationDocType, VerificationStatus } from '.prisma/client';
+import { VerificationDocType, VerificationStatus, DocReviewStatus } from '.prisma/client';
 
 @Injectable()
 export class VerificationService {
@@ -50,17 +50,19 @@ export class VerificationService {
     if (!file) throw new BadRequestException('No file provided');
 
     const verification = await this.findOrCreateVerification(userId);
+    const existing = verification.documents.find((d) => d.type === type);
 
-    if (
-      verification.status !== VerificationStatus.not_started &&
-      verification.status !== VerificationStatus.rejected
-    ) {
+    const overallAllowsUpload =
+      verification.status === VerificationStatus.not_started ||
+      verification.status === VerificationStatus.rejected;
+    const thisDocWasRejected = existing?.status === DocReviewStatus.rejected;
+
+    if (!overallAllowsUpload && !thisDocWasRejected) {
       throw new ForbiddenException(
         'Cannot upload documents while verification is pending or already verified',
       );
     }
 
-    const existing = verification.documents.find((d) => d.type === type);
     if (existing) {
       try { await this.s3.delete(existing.fileKey); } catch { /* old file may not exist */ }
       await this.prisma.verificationDocument.delete({ where: { id: existing.id } });
