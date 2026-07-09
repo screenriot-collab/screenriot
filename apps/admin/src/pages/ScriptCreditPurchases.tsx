@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useScriptCreditPurchases } from '@/hooks/useScriptCreditPurchases';
+import { Pagination } from '@/components/ui/Pagination';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
@@ -191,29 +192,7 @@ export default function ScriptCreditPurchases() {
             </table>
           </div>
 
-          {totalPages > 1 ? (
-            <div className="mt-4 flex items-center gap-3">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-md border border-white/15 px-3 py-1 text-sm text-white disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-400">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="rounded-md border border-white/15 px-3 py-1 text-sm text-white disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          ) : null}
+          <Pagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
         </>
       )}
     </>

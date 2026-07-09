@@ -2,6 +2,7 @@ import { useState, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { fulfillDonationFromStripe } from '@/lib/api';
 import { useFilmsWithInvestments } from '@/hooks/useFilmsWithInvestments';
+import { Pagination } from '@/components/ui/Pagination';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -33,7 +34,6 @@ const WEB_ORIGIN = import.meta.env.VITE_WEB_ORIGIN ?? '';
 export default function FilmsWithInvestments() {
   const {
     films,
-    total,
     page,
     totalPages,
     loading,
@@ -261,31 +261,7 @@ export default function FilmsWithInvestments() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-gray-400">
-          <span>
-            Page {page} of {totalPages} ({total} total)
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="rounded border border-white/10 px-2 py-1 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="rounded border border-white/10 px-2 py-1 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
     </>
   );
 }

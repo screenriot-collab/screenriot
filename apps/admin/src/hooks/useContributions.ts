@@ -11,6 +11,7 @@ export function useContributions() {
   const [search, setSearch] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -32,20 +33,22 @@ export function useContributions() {
   }, [loadData]);
 
   const handleApprove = async (id: string) => {
+    setActionError(null);
     try {
       await approveContribution(id);
       await loadData();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to approve contribution');
+      setActionError(err instanceof Error ? err.message : 'Failed to approve contribution');
     }
   };
 
   const handleReject = async (id: string, adminComment: string) => {
+    setActionError(null);
     try {
       await rejectContribution(id, adminComment);
       await loadData();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to reject contribution');
+      setActionError(err instanceof Error ? err.message : 'Failed to reject contribution');
     }
   };
 
@@ -56,6 +59,7 @@ export function useContributions() {
     totalPages,
     loading,
     error,
+    actionError,
     status,
     search,
     setPage,

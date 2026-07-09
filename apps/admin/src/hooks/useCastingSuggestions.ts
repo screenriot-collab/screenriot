@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  getCastingSuggestions,
-  updateCastingSuggestion,
-  type CastingSuggestionRow,
-  type UpdateCastingSuggestionPayload,
-} from '@/lib/api';
+import { getCastingSuggestions, updateCastingSuggestion } from '@/lib/api';
+import type { CastingSuggestionRow, UpdateCastingSuggestionPayload } from '@/types/casting-suggestions';
 
 export function useCastingSuggestions(filmId: string) {
   const [suggestions, setSuggestions] = useState<CastingSuggestionRow[]>([]);
