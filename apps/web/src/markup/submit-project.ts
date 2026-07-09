@@ -14,9 +14,9 @@ export const UPDATE_PROJECT_PAGE = {
 } as const;
 
 export const SUBMIT_SUCCESS = {
-  title: 'Application submitted!',
+  title: 'Project saved!',
   description:
-    'Thank you for submitting your project. After you complete the submission fee payment, our team will review your application within 5 business days. We will contact you with next steps.',
+    'Your project has been saved as a draft. It will not be sent for review until the submission fee is paid - pay now to submit it for review within 5 business days.',
   buttonLabel: 'Go to My Films',
   buttonHref: '/dashboard/films',
 } as const;
@@ -30,7 +30,7 @@ export const UPDATE_SUCCESS = {
 } as const;
 
 export const WIZARD_ACTIONS = {
-  submitButton: 'Submit Project',
+  submitButton: 'Save Project',
   updateButton: 'Update Project',
 } as const;
 
