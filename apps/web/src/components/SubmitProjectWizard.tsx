@@ -162,9 +162,11 @@ export function SubmitProjectWizard({
               error={wizard.stepErrors[5] ?? null}
               submissionFeePaid={wizard.submissionFeePaid}
               filmId={filmId}
+              isSubmitting={wizard.isSubmitting}
               onSetStep5={wizard.setStep5}
               onFilesChange={wizard.setStep5Files}
               onClearError={() => wizard.setStepError(5, null)}
+              onSaveAndPay={wizard.handleSaveAndPay}
             />
           </>
         )}

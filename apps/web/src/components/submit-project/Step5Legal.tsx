@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { IMAGES } from '@/lib/constants';
 import {
   SUBMIT_STEPS,
@@ -20,9 +19,11 @@ interface Step5Props {
   error: string | null;
   submissionFeePaid: boolean;
   filmId?: string;
+  isSubmitting: boolean;
   onSetStep5: (update: Partial<Step5Data>) => void;
   onFilesChange: React.Dispatch<React.SetStateAction<Step5Files>>;
   onClearError: () => void;
+  onSaveAndPay: () => void;
 }
 
 export function Step5Legal({
@@ -32,9 +33,11 @@ export function Step5Legal({
   error,
   submissionFeePaid,
   filmId,
+  isSubmitting,
   onSetStep5,
   onFilesChange,
   onClearError,
+  onSaveAndPay,
 }: Step5Props) {
   return (
     <div className="space-y-8">
@@ -149,12 +152,19 @@ export function Step5Legal({
             ))}
           </div>
           {filmId && (
-            <Link
-              href={`/dashboard/films/pay?film=${filmId}`}
-              className="mt-4 inline-block rounded-lg bg-screenriot-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg"
-            >
-              {SUBMISSION_FEE_CTA.buttonLabel}
-            </Link>
+            <>
+              <button
+                type="button"
+                onClick={onSaveAndPay}
+                disabled={isSubmitting}
+                className="mt-4 inline-block rounded-lg bg-screenriot-accent-blue px-4 py-2 text-sm font-medium text-white hover:bg-screenriot-accent-blue/90 focus:outline-none focus:ring-2 focus:ring-screenriot-accent-blue focus:ring-offset-2 focus:ring-offset-screenriot-bg disabled:opacity-50"
+              >
+                {isSubmitting ? 'Saving…' : SUBMISSION_FEE_CTA.buttonLabel}
+              </button>
+              <p className="mt-2 text-xs text-screenriot-muted">
+                Saves your latest changes first, then takes you to the payment page.
+              </p>
+            </>
           )}
         </div>
       )}
