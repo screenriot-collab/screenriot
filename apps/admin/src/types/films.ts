@@ -124,6 +124,7 @@ export type FilmsListResponse = {
 /** Payload for PATCH /admin/films/:id/page (edit public film page). Slug is read-only from application. */
 export type FilmPageUpdate = {
   title?: string;
+  logline?: string;
   synopsis?: string;
   directorName?: string;
   genre?: string;

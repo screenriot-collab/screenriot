@@ -342,6 +342,7 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
   return {
     slug: f.slug ?? '',
     title: f.title ?? '',
+    logline: f.logline ?? '',
     synopsis: f.synopsis ?? '',
     directorName: f.directorName ?? '',
     genre: f.genre ?? '',
@@ -496,6 +497,7 @@ export function buildFilmPageUpdatePayload(
 
   return {
     title: form.title,
+    logline: form.logline,
     synopsis: form.synopsis,
     directorName: form.directorName,
     genre: form.genre,

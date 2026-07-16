@@ -332,6 +332,7 @@ export class AdminFilmsService {
     const data: Prisma.FilmUpdateInput = {};
     // Slug is set from application and cannot be changed via film page edit
     if (dto.title !== undefined) data.title = dto.title.trim();
+    if (dto.logline !== undefined) data.logline = dto.logline.trim() || null;
     if (dto.synopsis !== undefined) data.synopsis = dto.synopsis.trim() || null;
     if (dto.directorName !== undefined) data.directorName = dto.directorName.trim() || null;
     if (dto.genre !== undefined) data.genre = dto.genre.trim() || null;
