@@ -141,7 +141,12 @@ export type FilmPageUpdate = {
 export type MainCharacterForm = {
   id: string;
   name: string;
+  /** Computed display text ("Character · Tier label") shown on the public film page. */
   role: string;
+  /** Character name, edited separately from the computed `role` display text. */
+  character?: string;
+  /** Cast tier id (see CAST_TIER_OPTIONS in constants/films.ts) - kept structured so it can be re-edited via select. */
+  tier?: string;
   description: string;
   imageUrl?: string | null;
   actorEmail?: string;
