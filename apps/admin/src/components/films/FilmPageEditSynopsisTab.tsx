@@ -19,7 +19,7 @@ export function FilmPageEditSynopsisTab({ form, setForm, film }: Props) {
       aria-labelledby="section-synopsis"
     >
       <h2 id="section-synopsis" className={CLASS_SECTION_TITLE}>
-        Tab — Synopsis
+        Tab — Synopsis (shown on the film page)
       </h2>
       <div className="space-y-3">
         <div>

@@ -19,6 +19,10 @@ export class UpdateFilmPageDto {
 
   @IsOptional()
   @IsString()
+  logline?: string;
+
+  @IsOptional()
+  @IsString()
   synopsis?: string;
 
   @IsOptional()
