@@ -1,11 +1,20 @@
-export const CAST_TIER_VALUES = ['lead', 'co_lead', 'supporting', 'background'] as const;
+export const CAST_TIER_VALUES = [
+  'lead_protagonist',
+  'second_lead_protagonist',
+  'lead_antagonist',
+  'supporting',
+  'co_lead',
+  'background',
+] as const;
 
 export type CastTier = (typeof CAST_TIER_VALUES)[number];
 
 export const CAST_TIER_LABELS: Record<CastTier, string> = {
-  lead: 'Lead',
-  co_lead: 'Co-Lead',
+  lead_protagonist: 'Lead Protagonist',
+  second_lead_protagonist: 'Second Lead Protagonist',
+  lead_antagonist: 'Lead Antagonist',
   supporting: 'Supporting Role',
+  co_lead: 'Co-Lead',
   background: 'Background Actor',
 };
 
@@ -31,7 +40,7 @@ export function emptyKeyCastMember(): KeyCastMember {
   return {
     actorName: '',
     character: '',
-    tier: 'lead',
+    tier: 'lead_protagonist',
     actorEmail: '',
     characterDescription: '',
   };
@@ -41,7 +50,7 @@ export function emptyWishListCastMember(): WishListCastMember {
   return {
     actorName: '',
     character: '',
-    tier: 'lead',
+    tier: 'lead_protagonist',
     characterDescription: '',
     status: 'wish_list',
   };
@@ -71,11 +80,11 @@ function legacyRoleToCharacter(row: {
 }
 
 export function normalizeKeyCastMember(raw: Record<string, unknown>): KeyCastMember {
-  const tierRaw = String(raw.tier ?? 'lead');
+  const tierRaw = String(raw.tier ?? 'lead_protagonist');
   return {
     actorName: String(raw.actorName ?? '').trim(),
     character: legacyRoleToCharacter(raw as { character?: string; role?: string }),
-    tier: isCastTier(tierRaw) ? tierRaw : 'lead',
+    tier: isCastTier(tierRaw) ? tierRaw : 'lead_protagonist',
     actorEmail: String(raw.actorEmail ?? '').trim(),
     characterDescription: String(raw.characterDescription ?? '').trim(),
   };
@@ -85,12 +94,12 @@ export function normalizeWishListCast(raw: unknown): WishListCastMember[] {
   if (Array.isArray(raw)) {
     return raw.map((item) => {
       const row = (item ?? {}) as Record<string, unknown>;
-      const tierRaw = String(row.tier ?? 'lead');
+      const tierRaw = String(row.tier ?? 'lead_protagonist');
       const statusRaw = String(row.status ?? 'wish_list');
       return {
         actorName: String(row.actorName ?? '').trim(),
         character: legacyRoleToCharacter(row as { character?: string; role?: string }),
-        tier: isCastTier(tierRaw) ? tierRaw : 'lead',
+        tier: isCastTier(tierRaw) ? tierRaw : 'lead_protagonist',
         characterDescription: String(row.characterDescription ?? '').trim(),
         status: statusRaw === 'verified' ? 'verified' : 'wish_list',
       };
