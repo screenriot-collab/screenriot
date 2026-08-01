@@ -61,6 +61,48 @@ export function useFilmDetail(id: string | undefined) {
     }
   }
 
+  /** Sends the film back to the filmmaker and flags it as needing their attention, in one step. */
+  async function requestChanges() {
+    if (!id) return;
+    const hasComment = Object.values(comments).some((c) => c.trim());
+    if (!hasComment) {
+      setError('Add a comment on at least one step before requesting changes.');
+      return;
+    }
+    setActionLoading(true);
+    setError('');
+    try {
+      await updateFilmReview(id, {
+        status: 'pending_approval',
+        reviewStatus: 'action_required',
+        reviewComments: comments,
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  /** Clears the review flag (action_required or changes_submitted) without changing the film's status. */
+  async function resetReviewStatus() {
+    if (!id) return;
+    setActionLoading(true);
+    setError('');
+    try {
+      await updateFilmReview(id, {
+        reviewStatus: 'no_action',
+        reviewComments: comments,
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   function updateComment(step: keyof ReviewComments, value: string) {
     setComments((prev) => ({ ...prev, [step]: value }));
   }
@@ -72,8 +114,9 @@ export function useFilmDetail(id: string | undefined) {
     actionLoading,
     comments,
     reviewStatus,
-    setReviewStatus,
     updateComment,
     applyAction,
+    requestChanges,
+    resetReviewStatus,
   };
 }
