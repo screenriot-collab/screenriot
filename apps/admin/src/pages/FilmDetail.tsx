@@ -16,6 +16,7 @@ export default function FilmDetail() {
     error,
     actionLoading,
     comments,
+    commentsChanged,
     reviewStatus,
     updateComment,
     applyAction,
@@ -30,6 +31,16 @@ export default function FilmDetail() {
       message: 'Clear the review flag and set it back to "No action needed"?',
       confirmLabel: 'Reset',
       onConfirm: () => void resetReviewStatus(),
+    });
+  }
+
+  function confirmReject() {
+    requestConfirm({
+      title: 'Reject film',
+      message: `Reject "${film?.title}"? The filmmaker will be notified.`,
+      confirmLabel: 'Reject',
+      tone: 'danger',
+      onConfirm: () => void applyAction({ status: 'rejected' }),
     });
   }
 
@@ -293,23 +304,35 @@ export default function FilmDetail() {
             })()}
             <button
               type="button"
-              onClick={() => void applyAction({ status: 'rejected' })}
+              onClick={confirmReject}
               disabled={actionLoading}
               className="rounded-md bg-red-500/90 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-500 disabled:opacity-50"
               aria-label="Reject film"
             >
               {actionLoading ? 'Saving…' : 'Reject'}
             </button>
-            <button
-              type="button"
-              onClick={() => void requestChanges()}
-              disabled={actionLoading}
-              title="Add a comment on at least one step, then request changes"
-              className="rounded-md bg-amber-500/20 px-5 py-2 text-sm font-medium text-amber-300 shadow-sm transition-colors hover:bg-amber-500/30 disabled:opacity-50"
-              aria-label={reviewStatus === 'action_required' ? 'Update requested changes' : 'Request changes'}
-            >
-              {actionLoading ? 'Saving…' : reviewStatus === 'action_required' ? 'Update request' : 'Request changes'}
-            </button>
+            {(() => {
+              const isUpdate = reviewStatus === 'action_required';
+              const hasComment = Object.values(comments).some((c) => c.trim());
+              const nothingToUpdate = isUpdate && !commentsChanged;
+              const disabledReason = !hasComment
+                ? 'Add a comment on at least one step first'
+                : nothingToUpdate
+                  ? 'No new comments to update'
+                  : undefined;
+              return (
+                <button
+                  type="button"
+                  onClick={() => void requestChanges()}
+                  disabled={actionLoading || !hasComment || nothingToUpdate}
+                  title={disabledReason}
+                  className="rounded-md bg-amber-500/20 px-5 py-2 text-sm font-medium text-amber-300 shadow-sm transition-colors hover:bg-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={disabledReason ?? (isUpdate ? 'Update requested changes' : 'Request changes')}
+                >
+                  {actionLoading ? 'Saving…' : isUpdate ? 'Update request' : 'Request changes'}
+                </button>
+              );
+            })()}
           </div>
         </div>
       )}
