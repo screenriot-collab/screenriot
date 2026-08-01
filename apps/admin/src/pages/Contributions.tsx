@@ -1,8 +1,11 @@
 import { useState, Fragment } from 'react';
 import { useContributions } from '@/hooks/useContributions';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import type { AdminContribution } from '@/types/contributions';
 import { ContributionRedline } from '@/components/contributions/ContributionRedline';
 import { Pagination } from '@/components/ui/Pagination';
+import { StatusPill, statusAccentClass, statusTextClass } from '@/components/ui/StatusPill';
+import type { StatusVariant } from '@/components/ui/StatusPill';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -10,6 +13,16 @@ const STATUS_OPTIONS = [
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
 ];
+
+const CONTRIBUTION_STATUS_VARIANT: Record<string, StatusVariant> = {
+  pending: 'warn',
+  approved: 'ok',
+  rejected: 'bad',
+};
+
+function contributionVariant(status: string): StatusVariant {
+  return CONTRIBUTION_STATUS_VARIANT[status] ?? 'neutral';
+}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -38,6 +51,7 @@ export default function Contributions() {
     handleReject,
   } = useContributions();
 
+  const { requestConfirm, dialog } = useConfirmDialog();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [rejectComment, setRejectComment] = useState('');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -49,9 +63,12 @@ export default function Contributions() {
   }
 
   function onApprove(c: AdminContribution) {
-    if (window.confirm(`Approve changes for "${c.film.title}"?`)) {
-      handleApprove(c.id);
-    }
+    requestConfirm({
+      title: 'Approve changes',
+      message: `Approve changes for "${c.film.title}"?`,
+      confirmLabel: 'Approve',
+      onConfirm: () => handleApprove(c.id),
+    });
   }
 
   function onRejectSubmit(c: AdminContribution) {
@@ -91,7 +108,7 @@ export default function Contributions() {
             className="rounded-md border border-white/10 bg-admin-bg px-2 py-1.5 text-sm text-white focus:border-admin-accent/60 focus:outline-none focus:ring-1 focus:ring-admin-accent/30"
           >
             {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
+              <option key={o.value} value={o.value} className={statusTextClass(contributionVariant(o.value))}>
                 {o.label}
               </option>
             ))}
@@ -134,21 +151,13 @@ export default function Contributions() {
               {contributions.map((c) => (
                 <Fragment key={c.id}>
                   <tr className="border-b border-white/5 hover:bg-white/[0.03]">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-400">#{c.number}</td>
+                    <td className={`px-4 py-3 font-mono text-xs text-gray-400 ${statusAccentClass(contributionVariant(c.status))}`}>
+                      #{c.number}
+                    </td>
                     <td className="px-4 py-3 font-medium text-white">{c.film.title}</td>
                     <td className="px-4 py-3 text-gray-300">{c.user.email}</td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          c.status === 'approved'
-                            ? 'bg-green-500/20 text-green-400'
-                            : c.status === 'rejected'
-                              ? 'bg-red-500/20 text-red-400'
-                              : 'bg-amber-500/20 text-amber-400'
-                        }`}
-                      >
-                        {c.status}
-                      </span>
+                      <StatusPill label={c.status} variant={contributionVariant(c.status)} />
                     </td>
                     <td className="px-4 py-3 text-gray-400">{formatDate(c.createdAt)}</td>
                     <td className="px-4 py-3">
@@ -241,6 +250,7 @@ export default function Contributions() {
       )}
 
       <Pagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
+      {dialog}
     </>
   );
 }

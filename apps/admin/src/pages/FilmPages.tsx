@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFilmPagesList } from '@/hooks/useFilmPagesList';
-import { StatusPill, statusVariant } from '@/components/ui/StatusPill';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
+import { StatusPill, statusVariant, statusAccentClass } from '@/components/ui/StatusPill';
+import { ExternalLinkIcon } from '@/components/ui/icons/ExternalLinkIcon';
 import { Pagination } from '@/components/ui/Pagination';
 import { updateFilmPage } from '@/lib/api';
+import { WEB_ORIGIN } from '@/lib/env';
 
 export default function FilmPages() {
   const navigate = useNavigate();
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const { requestConfirm, dialog } = useConfirmDialog();
   const {
     films,
     loading,
@@ -24,15 +28,24 @@ export default function FilmPages() {
     reload,
   } = useFilmPagesList();
 
-  async function handleTogglePublished(f: { id: string; pagePublished?: boolean }) {
+  function handleTogglePublished(f: { id: string; title: string; pagePublished?: boolean }) {
     if (togglingId) return;
-    setTogglingId(f.id);
-    try {
-      await updateFilmPage(f.id, { pagePublished: !f.pagePublished });
-      await reload();
-    } finally {
-      setTogglingId(null);
-    }
+    const action = f.pagePublished ? 'Unpublish' : 'Publish';
+    requestConfirm({
+      title: `${action} page`,
+      message: `${action} the page for "${f.title}"?`,
+      confirmLabel: action,
+      tone: f.pagePublished ? 'danger' : 'default',
+      onConfirm: async () => {
+        setTogglingId(f.id);
+        try {
+          await updateFilmPage(f.id, { pagePublished: !f.pagePublished });
+          await reload();
+        } finally {
+          setTogglingId(null);
+        }
+      },
+    });
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent) {
@@ -125,45 +138,69 @@ export default function FilmPages() {
               </tr>
             ) : (
               films.map((f) => (
-                <tr key={f.id} className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]">
-                  <td className="px-4 py-3 font-medium text-white">{f.title}</td>
-                  <td className="px-4 py-3 text-gray-400">/{f.slug}</td>
+                <tr
+                  key={f.id}
+                  className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]"
+                >
+                  <td className={`px-4 py-3 font-medium text-white ${statusAccentClass(f.pagePublished ? 'ok' : 'warn')}`}>{f.title}</td>
+                  <td className="px-4 py-3 text-gray-400">
+                    {f.pagePublished && WEB_ORIGIN ? (
+                      <a
+                        href={`${WEB_ORIGIN}/films/${f.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-white hover:underline"
+                        aria-label={`View "${f.title}" on the live site`}
+                      >
+                        /{f.slug}
+                        <ExternalLinkIcon />
+                      </a>
+                    ) : (
+                      <>/{f.slug}</>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <StatusPill label={f.status} variant={statusVariant(f.status)} />
                   </td>
                   <td className="px-4 py-3">
-                    <span className="mr-1.5 text-xs text-gray-400">
-                      {f.pagePublished ? 'Published' : 'Unpublished'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => void handleTogglePublished(f)}
-                      disabled={togglingId === f.id}
-                      className="rounded bg-white/10 px-2 py-0.5 text-xs font-medium text-gray-300 hover:bg-white/20 disabled:opacity-50"
-                      aria-label={f.pagePublished ? 'Unpublish from site' : 'Publish on site'}
-                    >
-                      {togglingId === f.id ? '…' : f.pagePublished ? 'Unpublish' : 'Publish'}
-                    </button>
+                    <StatusPill
+                      label={f.pagePublished ? 'Published' : 'Unpublished'}
+                      variant={f.pagePublished ? 'ok' : 'warn'}
+                    />
                   </td>
                   <td className="px-4 py-3 text-gray-400">{f.filmmaker?.email ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500">{new Date(f.updatedAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePublished(f)}
+                        disabled={togglingId === f.id}
+                        className={
+                          f.pagePublished
+                            ? 'rounded px-3 py-1 text-xs font-medium text-red-300 bg-red-500/10 transition-colors hover:bg-red-500/20 disabled:opacity-50'
+                            : 'rounded px-3 py-1 text-xs font-medium text-emerald-300 bg-emerald-500/10 transition-colors hover:bg-emerald-500/20 disabled:opacity-50'
+                        }
+                        aria-label={f.pagePublished ? 'Unpublish page from site' : 'Publish page on site'}
+                      >
+                        {togglingId === f.id ? '…' : f.pagePublished ? 'Unpublish page' : 'Publish page'}
+                      </button>
                       <button
                         type="button"
                         onClick={() => navigate(`/film-pages/${f.id}`)}
-                        className="rounded bg-admin-accent/10 px-2.5 py-0.5 text-xs font-medium text-admin-accent transition-colors hover:bg-admin-accent/20"
-                        aria-label={`Edit page ${f.title}`}
+                        className="rounded bg-admin-accent/10 px-3 py-1 text-xs font-medium text-admin-accent transition-colors hover:bg-admin-accent/20"
+                        aria-label={`Manage page ${f.title}`}
                       >
-                        Edit page
+                        Manage page
                       </button>
                       <button
                         type="button"
                         onClick={() => navigate(`/films/${f.id}`)}
-                        className="rounded bg-white/10 px-2.5 py-0.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/20"
+                        className="rounded bg-white/10 px-3 py-1 text-xs font-medium text-gray-300 transition-colors hover:bg-white/20"
                         aria-label={`Open application ${f.title}`}
                       >
                         Application
+                        <ExternalLinkIcon />
                       </button>
                     </div>
                   </td>
@@ -175,6 +212,7 @@ export default function FilmPages() {
       </div>
 
       <Pagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
+      {dialog}
     </>
   );
 }

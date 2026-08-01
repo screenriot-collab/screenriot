@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useUsersList } from '@/hooks/useUsersList';
-import { StatusPill } from '@/components/ui/StatusPill';
+import { StatusPill, statusAccentClass, statusBadgeClass, statusTextClass } from '@/components/ui/StatusPill';
 import { Pagination } from '@/components/ui/Pagination';
 import { USER_TABS, VERIFICATION_TABS, VERIFICATION_STATUS_LABEL } from '@/constants/site-users';
 import type { StatusVariant } from '@/components/ui/StatusPill';
@@ -17,6 +17,20 @@ function verificationVariant(status: string): StatusVariant {
 function roleVariant(role: string): StatusVariant {
   return role === 'filmmaker' ? 'info' : 'purple';
 }
+
+const ROLE_TAB_VARIANT: Record<string, StatusVariant> = {
+  all: 'neutral',
+  fan: 'purple',
+  filmmaker: 'info',
+};
+
+const VERIFICATION_TAB_VARIANT: Record<string, StatusVariant> = {
+  all: 'neutral',
+  not_started: 'neutral',
+  pending: 'warn',
+  verified: 'ok',
+  rejected: 'bad',
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -81,8 +95,8 @@ export default function Users() {
                   onClick={() => changeRoleTab(t.id)}
                   className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-admin-accent/15 text-admin-accent'
-                      : 'text-gray-400 hover:bg-white/[0.06] hover:text-gray-200'
+                      ? statusBadgeClass(ROLE_TAB_VARIANT[t.id] ?? 'neutral')
+                      : `${statusTextClass(ROLE_TAB_VARIANT[t.id] ?? 'neutral')} hover:bg-white/[0.06]`
                   }`}
                 >
                   {t.label}
@@ -139,8 +153,8 @@ export default function Users() {
                 onClick={() => changeVerificationTab(t.id)}
                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-admin-accent/15 text-admin-accent'
-                    : 'text-gray-400 hover:bg-white/[0.06] hover:text-gray-200'
+                    ? statusBadgeClass(VERIFICATION_TAB_VARIANT[t.id] ?? 'neutral')
+                    : `${statusTextClass(VERIFICATION_TAB_VARIANT[t.id] ?? 'neutral')} hover:bg-white/[0.06]`
                 }`}
               >
                 {t.label}
@@ -188,7 +202,7 @@ export default function Users() {
             ) : (
               users.map((u) => (
                 <tr key={u.id} className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]">
-                  <td className="px-4 py-3">
+                  <td className={`px-4 py-3 ${statusAccentClass(verificationVariant(u.verificationStatus))}`}>
                     <span className="font-medium text-white">{userName(u)}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-400">{u.email}</td>

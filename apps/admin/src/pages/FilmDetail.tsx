@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFilmDetail } from '@/hooks/useFilmDetail';
 import { StatusPill, statusVariant } from '@/components/ui/StatusPill';
+import { ExternalLinkIcon } from '@/components/ui/icons/ExternalLinkIcon';
 import { FileRow } from '@/components/ui/FileRow';
 import { StepCard } from '@/components/films/StepCard';
 import type { Step3Data, Step4Data } from '@/types/films';
@@ -69,9 +70,10 @@ export default function FilmDetail() {
                   type="button"
                   onClick={() => navigate(`/film-pages/${film.id}`)}
                   className="rounded bg-admin-accent/15 px-3 py-1 text-sm font-medium text-admin-accent transition-colors hover:bg-admin-accent/25"
-                  aria-label="Edit film page"
+                  aria-label="Manage film page"
                 >
-                  Edit film page
+                  Manage film page
+                  <ExternalLinkIcon />
                 </button>
               )}
             </div>

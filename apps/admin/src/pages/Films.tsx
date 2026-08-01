@@ -1,11 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { useFilmsList } from '@/hooks/useFilmsList';
-import { StatusPill, statusVariant } from '@/components/ui/StatusPill';
+import { StatusPill, statusVariant, statusAccentClass, statusBadgeClass, statusTextClass } from '@/components/ui/StatusPill';
 import type { StatusVariant } from '@/components/ui/StatusPill';
+import { ExternalLinkIcon } from '@/components/ui/icons/ExternalLinkIcon';
 import { Pagination } from '@/components/ui/Pagination';
 import { STATUS_TABS } from '@/constants/films';
 
 const EDIT_PAGE_STATUSES = ['approved', 'fundraising', 'funded', 'closed'];
+
+const TAB_VARIANT: Record<string, StatusVariant> = {
+  all: 'neutral',
+  pending: 'warn',
+  approved: 'ok',
+  rejected: 'bad',
+  draft: 'purple',
+};
 
 function reviewVariant(status: string): StatusVariant {
   switch (status) {
@@ -74,8 +83,8 @@ export default function Films() {
                 onClick={() => changeTab(t.id)}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-admin-accent/15 text-admin-accent'
-                    : 'text-gray-400 hover:bg-white/[0.06] hover:text-gray-200'
+                    ? statusBadgeClass(TAB_VARIANT[t.id] ?? 'neutral')
+                    : `${statusTextClass(TAB_VARIANT[t.id] ?? 'neutral')} hover:bg-white/[0.06]`
                 }`}
               >
                 {t.label}
@@ -157,8 +166,11 @@ export default function Films() {
               </tr>
             ) : (
               films.map((f) => (
-                <tr key={f.id} className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]">
-                  <td className="px-4 py-3">
+                <tr
+                  key={f.id}
+                  className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]"
+                >
+                  <td className={`px-4 py-3 ${statusAccentClass(statusVariant(f.status))}`}>
                     <span className="font-medium text-white">{f.title}</span>
                     <span className="ml-2 text-xs text-gray-600">/{f.slug}</span>
                   </td>
@@ -199,9 +211,10 @@ export default function Films() {
                           type="button"
                           onClick={() => navigate(`/film-pages/${f.id}`)}
                           className="rounded bg-white/10 px-2.5 py-0.5 text-xs font-medium text-gray-300 transition-colors hover:bg-white/20"
-                          aria-label={`Edit film page ${f.title}`}
+                          aria-label={`Manage page ${f.title}`}
                         >
-                          Edit page
+                          Manage page
+                          <ExternalLinkIcon />
                         </button>
                       )}
                     </div>

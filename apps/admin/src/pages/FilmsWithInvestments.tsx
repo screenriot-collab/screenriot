@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { fulfillDonationFromStripe } from '@/lib/api';
 import { useFilmsWithInvestments } from '@/hooks/useFilmsWithInvestments';
 import { Pagination } from '@/components/ui/Pagination';
+import { ExternalLinkIcon } from '@/components/ui/icons/ExternalLinkIcon';
+import { WEB_ORIGIN } from '@/lib/env';
+import { StatusPill, statusAccentClass, statusTextClass } from '@/components/ui/StatusPill';
+import type { StatusVariant } from '@/components/ui/StatusPill';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -11,6 +15,17 @@ const STATUS_OPTIONS = [
   { value: 'funded', label: 'Funded' },
   { value: 'closed', label: 'Closed' },
 ];
+
+const FILM_INVESTMENT_STATUS_VARIANT: Record<string, StatusVariant> = {
+  approved: 'ok',
+  fundraising: 'info',
+  funded: 'purple',
+  closed: 'neutral',
+};
+
+function filmInvestmentVariant(status: string): StatusVariant {
+  return FILM_INVESTMENT_STATUS_VARIANT[status] ?? 'neutral';
+}
 
 function formatUsd(n: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -28,8 +43,6 @@ function formatDate(iso: string): string {
     day: 'numeric',
   });
 }
-
-const WEB_ORIGIN = import.meta.env.VITE_WEB_ORIGIN ?? '';
 
 export default function FilmsWithInvestments() {
   const {
@@ -150,7 +163,11 @@ export default function FilmsWithInvestments() {
             aria-label="Filter by film status"
           >
             {STATUS_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
+              <option
+                key={o.value || 'all'}
+                value={o.value}
+                className={statusTextClass(filmInvestmentVariant(o.value))}
+              >
                 {o.label}
               </option>
             ))}
@@ -182,11 +199,13 @@ export default function FilmsWithInvestments() {
                     key={f.filmId}
                     className="border-b border-white/5 hover:bg-white/[0.03]"
                   >
-                    <td className="px-4 py-3">
+                    <td className={`px-4 py-3 ${statusAccentClass(filmInvestmentVariant(f.status))}`}>
                       <span className="font-medium text-white">{f.title}</span>
                       <span className="ml-2 text-gray-500">{f.slug}</span>
                     </td>
-                    <td className="px-4 py-3 text-gray-300">{f.status}</td>
+                    <td className="px-4 py-3">
+                      <StatusPill label={f.status} variant={filmInvestmentVariant(f.status)} />
+                    </td>
                     <td className="px-4 py-3 font-medium text-white">{formatUsd(f.totalRaised)}</td>
                     <td className="px-4 py-3 text-gray-300">{f.investorsCount}</td>
                     <td className="px-4 py-3 text-gray-400">
@@ -207,7 +226,8 @@ export default function FilmsWithInvestments() {
                           to={`/film-pages/${f.filmId}`}
                           className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-admin-accent/50"
                         >
-                          Edit page
+                          Manage page
+                          <ExternalLinkIcon />
                         </Link>
                         {WEB_ORIGIN && (
                           <a
@@ -217,6 +237,7 @@ export default function FilmsWithInvestments() {
                             className="text-gray-400 hover:text-white"
                           >
                             View on site
+                            <ExternalLinkIcon />
                           </a>
                         )}
                       </div>
