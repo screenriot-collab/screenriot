@@ -300,25 +300,16 @@ export default function FilmDetail() {
             >
               {actionLoading ? 'Saving…' : 'Reject'}
             </button>
-            {reviewStatus === 'action_required' ? (
-              <span
-                className="flex items-center gap-1.5 rounded-md bg-amber-500/15 px-5 py-2 text-sm font-medium text-amber-300"
-                role="status"
-              >
-                Changes Requested
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void requestChanges()}
-                disabled={actionLoading}
-                title="Add a comment on at least one step, then request changes"
-                className="rounded-md bg-amber-500/20 px-5 py-2 text-sm font-medium text-amber-300 shadow-sm transition-colors hover:bg-amber-500/30 disabled:opacity-50"
-                aria-label="Request changes"
-              >
-                {actionLoading ? 'Saving…' : 'Request changes'}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => void requestChanges()}
+              disabled={actionLoading}
+              title="Add a comment on at least one step, then request changes"
+              className="rounded-md bg-amber-500/20 px-5 py-2 text-sm font-medium text-amber-300 shadow-sm transition-colors hover:bg-amber-500/30 disabled:opacity-50"
+              aria-label={reviewStatus === 'action_required' ? 'Update requested changes' : 'Request changes'}
+            >
+              {actionLoading ? 'Saving…' : reviewStatus === 'action_required' ? 'Update request' : 'Request changes'}
+            </button>
           </div>
         </div>
       )}
