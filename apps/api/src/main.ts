@@ -26,9 +26,12 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://localhost:3002',
   ];
+  const isProduction = process.env.NODE_ENV === 'production';
   app.enableCors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Local dev: allow any origin (e.g. Docker network IPs like http://10.5.0.2:3000,
+      // accessed via Next.js's "Network:" URL) instead of chasing specific hosts/IPs.
+      if (!isProduction || !origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS: origin ${origin} not allowed`));

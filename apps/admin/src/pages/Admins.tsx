@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useTeamList } from '@/hooks/useTeamList';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { getCurrentUser, forgotPassword } from '@/lib/api';
 import { ADMIN_ROLES } from '@/constants/films';
 
 export default function Admins() {
   const currentUser = getCurrentUser();
   const { users, loading, error, setError, invite, remove } = useTeamList();
+  const { requestConfirm, dialog } = useConfirmDialog();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'admin' | 'manager'>('manager');
@@ -40,13 +42,20 @@ export default function Admins() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Remove this user from the team?')) return;
-    try {
-      await remove(id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
-    }
+  function handleDelete(id: string) {
+    requestConfirm({
+      title: 'Remove team member',
+      message: 'Remove this user from the team?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+      onConfirm: async () => {
+        try {
+          await remove(id);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Delete failed');
+        }
+      },
+    });
   }
 
   async function handleResetPassword(email: string) {
@@ -174,6 +183,7 @@ export default function Admins() {
           </tbody>
         </table>
       </div>
+      {dialog}
     </>
   );
 }

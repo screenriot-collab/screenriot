@@ -52,12 +52,19 @@ export function FilmPageEditInvestmentTiers({ form, setForm }: Props) {
     }));
   };
 
+  // Keep the raw split while typing — trimming/filtering here would strip a
+  // trailing space the moment it's typed, since the textarea's value is
+  // derived back from this same array on every render.
   const setBenefitsFromText = (id: string, text: string) => {
-    const benefits = text
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    updateTier(id, { benefits });
+    updateTier(id, { benefits: text.split('\n') });
+  };
+
+  const cleanBenefitsOnBlur = (id: string) => {
+    const tier = (form.sidebarTiers ?? []).find((t) => t.id === id);
+    if (!tier) return;
+    updateTier(id, {
+      benefits: (tier.benefits ?? []).map((s) => s.trim()).filter(Boolean),
+    });
   };
 
   return (
@@ -144,6 +151,7 @@ export function FilmPageEditInvestmentTiers({ form, setForm }: Props) {
                 onChange={(e) =>
                   setBenefitsFromText(tier.id, e.target.value)
                 }
+                onBlur={() => cleanBenefitsOnBlur(tier.id)}
                 className={CLASS_INPUT_SM}
                 placeholder="Digital copy of the film&#10;Name in credits"
                 aria-label="Tier benefits, one per line"

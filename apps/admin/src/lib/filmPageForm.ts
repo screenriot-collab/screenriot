@@ -1,6 +1,7 @@
 import {
   EDITABLE_PAGE_STATUSES,
   DEFAULT_PLEDGE_VOTING_CATEGORIES,
+  CAST_TIER_LABELS,
 } from '@/constants/films';
 import type {
   AdminFilmDetail,
@@ -39,15 +40,8 @@ function mapMetrics(arr: unknown): MetricForm[] {
   });
 }
 
-const TIER_LABELS: Record<string, string> = {
-  lead: 'Lead',
-  co_lead: 'Co-Lead',
-  supporting: 'Supporting Role',
-  background: 'Background Actor',
-};
-
-function roleLine(character: string, tier: string): string {
-  const tierLabel = TIER_LABELS[tier] ?? tier;
+export function roleLine(character: string, tier: string): string {
+  const tierLabel = CAST_TIER_LABELS[tier] ?? tier;
   if (character && tierLabel) return `${character} · ${tierLabel}`;
   return character || tierLabel || '';
 }
@@ -78,7 +72,7 @@ export function parseWishListCastToOptions(wishListRaw: unknown): CastingVoteOpt
     .filter((row) => (row.actorName ?? '').trim())
     .map((row, index) => {
       const character = (row.character ?? row.role ?? '').trim();
-      const tier = (row.tier ?? 'lead').trim();
+      const tier = (row.tier ?? 'lead_protagonist').trim();
       const status = row.status === 'verified' ? 'verified' : 'wish_list';
       return {
         id: `wish-${index}`,
@@ -110,6 +104,8 @@ function mainCharactersFromDetail(
       id: c.id ?? `cast-${Math.random().toString(36).slice(2, 9)}`,
       name: c.name ?? '',
       role: c.role ?? '',
+      character: c.character,
+      tier: c.tier,
       description: c.description ?? '',
       imageUrl: c.imageUrl ?? null,
       actorEmail: c.actorEmail ?? undefined,
@@ -119,13 +115,15 @@ function mainCharactersFromDetail(
     const actorName = (row.actorName ?? '').trim();
     const actorEmail = (row.actorEmail ?? '').trim();
     const character = (row.character ?? row.role ?? '').trim();
-    const tier = (row.tier ?? 'lead').trim();
+    const tier = (row.tier ?? 'lead_protagonist').trim();
     const name =
       actorName || (/@/.test(actorEmail) ? '—' : actorEmail || '—');
     return {
       id: `cast-${i}`,
       name,
       role: roleLine(character, tier),
+      character,
+      tier,
       description: (row.characterDescription ?? '').trim(),
       imageUrl: null,
       actorEmail: actorEmail || undefined,
@@ -344,6 +342,7 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
   return {
     slug: f.slug ?? '',
     title: f.title ?? '',
+    logline: f.logline ?? '',
     synopsis: f.synopsis ?? '',
     directorName: f.directorName ?? '',
     genre: f.genre ?? '',
@@ -498,6 +497,7 @@ export function buildFilmPageUpdatePayload(
 
   return {
     title: form.title,
+    logline: form.logline,
     synopsis: form.synopsis,
     directorName: form.directorName,
     genre: form.genre,

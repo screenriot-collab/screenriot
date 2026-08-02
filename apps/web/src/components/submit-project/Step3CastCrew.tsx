@@ -138,7 +138,7 @@ export function Step3CastCrew({
                 </label>
                 <TierSelect
                   id={`cast-tier-${i}`}
-                  value={row.tier ?? 'lead'}
+                  value={row.tier ?? 'lead_protagonist'}
                   onChange={(tier) => onUpdateCast(i, 'tier', tier)}
                 />
               </div>
@@ -267,7 +267,7 @@ export function Step3CastCrew({
                 </label>
                 <TierSelect
                   id={`wish-tier-${i}`}
-                  value={row.tier ?? 'lead'}
+                  value={row.tier ?? 'lead_protagonist'}
                   onChange={(tier) => onUpdateWishList(i, 'tier', tier)}
                 />
               </div>

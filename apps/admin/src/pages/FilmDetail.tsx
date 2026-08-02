@@ -1,6 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFilmDetail } from '@/hooks/useFilmDetail';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { StatusPill, statusVariant } from '@/components/ui/StatusPill';
+import { ExternalLinkIcon } from '@/components/ui/icons/ExternalLinkIcon';
 import { FileRow } from '@/components/ui/FileRow';
 import { StepCard } from '@/components/films/StepCard';
 import type { Step3Data, Step4Data } from '@/types/films';
@@ -14,11 +16,33 @@ export default function FilmDetail() {
     error,
     actionLoading,
     comments,
+    commentsChanged,
     reviewStatus,
-    setReviewStatus,
     updateComment,
     applyAction,
+    requestChanges,
+    resetReviewStatus,
   } = useFilmDetail(id);
+  const { requestConfirm, dialog } = useConfirmDialog();
+
+  function confirmResetReviewStatus() {
+    requestConfirm({
+      title: 'Reset review status',
+      message: 'Clear the review flag and set it back to "No action needed"?',
+      confirmLabel: 'Reset',
+      onConfirm: () => void resetReviewStatus(),
+    });
+  }
+
+  function confirmReject() {
+    requestConfirm({
+      title: 'Reject film',
+      message: `Reject "${film?.title}"? The filmmaker will be notified.`,
+      confirmLabel: 'Reject',
+      tone: 'danger',
+      onConfirm: () => void applyAction({ status: 'rejected' }),
+    });
+  }
 
   const film = detail?.film;
   const step3: Step3Data = film?.step3 ?? {};
@@ -69,43 +93,36 @@ export default function FilmDetail() {
                   type="button"
                   onClick={() => navigate(`/film-pages/${film.id}`)}
                   className="rounded bg-admin-accent/15 px-3 py-1 text-sm font-medium text-admin-accent transition-colors hover:bg-admin-accent/25"
-                  aria-label="Edit film page"
+                  aria-label="Manage film page"
                 >
-                  Edit film page
+                  Manage film page
+                  <ExternalLinkIcon />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Review selector */}
+          {/* Review status */}
           <div className="max-w-xs">
-            <label className="mb-1 block text-xs font-medium text-gray-400" htmlFor="review-select">
-              Review status
-            </label>
-            {reviewStatus === 'changes_submitted' ? (
-              <div className="flex items-center gap-2">
-                <StatusPill label="Changes submitted" variant="info" />
+            <p className="mb-1 text-xs font-medium text-gray-400">Review status</p>
+            {reviewStatus === 'no_action' ? (
+              <StatusPill label="No action needed" variant="neutral" />
+            ) : (
+              <div className="flex items-center gap-4">
+                <StatusPill
+                  label={reviewStatus === 'changes_submitted' ? 'Changes submitted' : 'Changes Requested'}
+                  variant={reviewStatus === 'changes_submitted' ? 'info' : 'warn'}
+                />
                 <button
                   type="button"
-                  onClick={() => setReviewStatus('no_action')}
-                  className="text-xs text-gray-400 hover:text-white"
-                  aria-label="Acknowledge changes and reset review status"
+                  onClick={confirmResetReviewStatus}
+                  disabled={actionLoading}
+                  className="text-xs font-medium text-admin-accent underline-offset-2 hover:underline disabled:opacity-50"
+                  aria-label="Reset review status to No action"
                 >
                   Reset to No action
                 </button>
               </div>
-            ) : (
-              <select
-                id="review-select"
-                value={reviewStatus}
-                onChange={(e) => setReviewStatus(e.target.value as 'action_required' | 'no_action')}
-                className="w-full rounded-md border border-white/10 bg-admin-bg px-2.5 py-1.5 text-sm text-white focus:border-admin-accent/60 focus:outline-none focus:ring-1 focus:ring-admin-accent/30"
-                aria-label="Review status"
-                disabled={actionLoading}
-              >
-                <option value="no_action">No action</option>
-                <option value="action_required">Action required</option>
-              </select>
             )}
           </div>
 
@@ -266,14 +283,20 @@ export default function FilmDetail() {
           <div className="flex flex-wrap gap-2.5 border-t border-white/[0.06] pt-5">
             {(() => {
               const alreadyApproved = ['approved', 'fundraising', 'funded', 'closed'].includes(film.status);
+              const feeUnpaid = !film.submissionFeePaid;
+              const disabledReason = alreadyApproved
+                ? 'Already approved'
+                : feeUnpaid
+                  ? 'Cannot approve: submission fee has not been paid'
+                  : undefined;
               return (
                 <button
                   type="button"
                   onClick={() => void applyAction({ status: 'approved' })}
-                  disabled={actionLoading || alreadyApproved}
-                  title={alreadyApproved ? 'Already approved' : undefined}
+                  disabled={actionLoading || alreadyApproved || feeUnpaid}
+                  title={disabledReason}
                   className="rounded-md bg-emerald-500/90 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={alreadyApproved ? 'Already approved' : 'Approve film'}
+                  aria-label={disabledReason ?? 'Approve film'}
                 >
                   {actionLoading ? 'Saving…' : alreadyApproved ? 'Approved' : 'Approve'}
                 </button>
@@ -281,25 +304,39 @@ export default function FilmDetail() {
             })()}
             <button
               type="button"
-              onClick={() => void applyAction({ status: 'rejected' })}
+              onClick={confirmReject}
               disabled={actionLoading}
               className="rounded-md bg-red-500/90 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-500 disabled:opacity-50"
               aria-label="Reject film"
             >
               {actionLoading ? 'Saving…' : 'Reject'}
             </button>
-            <button
-              type="button"
-              onClick={() => void applyAction({ status: 'pending_approval' })}
-              disabled={actionLoading}
-              className="rounded-md bg-amber-500/20 px-5 py-2 text-sm font-medium text-amber-300 shadow-sm transition-colors hover:bg-amber-500/30 disabled:opacity-50"
-              aria-label="Request changes"
-            >
-              {actionLoading ? 'Saving…' : 'Request changes'}
-            </button>
+            {(() => {
+              const isUpdate = reviewStatus === 'action_required';
+              const hasComment = Object.values(comments).some((c) => c.trim());
+              const nothingToUpdate = isUpdate && !commentsChanged;
+              const disabledReason = !hasComment
+                ? 'Add a comment on at least one step first'
+                : nothingToUpdate
+                  ? 'No new comments to update'
+                  : undefined;
+              return (
+                <button
+                  type="button"
+                  onClick={() => void requestChanges()}
+                  disabled={actionLoading || !hasComment || nothingToUpdate}
+                  title={disabledReason}
+                  className="rounded-md bg-amber-500/20 px-5 py-2 text-sm font-medium text-amber-300 shadow-sm transition-colors hover:bg-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={disabledReason ?? (isUpdate ? 'Update requested changes' : 'Request changes')}
+                >
+                  {actionLoading ? 'Saving…' : isUpdate ? 'Update request' : 'Request changes'}
+                </button>
+              );
+            })()}
           </div>
         </div>
       )}
+      {dialog}
     </>
   );
 }

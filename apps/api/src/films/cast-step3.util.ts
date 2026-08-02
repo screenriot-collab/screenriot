@@ -1,10 +1,19 @@
-export const CAST_TIER_VALUES = ['lead', 'co_lead', 'supporting', 'background'] as const;
+export const CAST_TIER_VALUES = [
+  'lead_protagonist',
+  'second_lead_protagonist',
+  'lead_antagonist',
+  'supporting',
+  'co_lead',
+  'background',
+] as const;
 export type CastTier = (typeof CAST_TIER_VALUES)[number];
 
 const TIER_LABELS: Record<CastTier, string> = {
-  lead: 'Lead',
-  co_lead: 'Co-Lead',
+  lead_protagonist: 'Lead Protagonist',
+  second_lead_protagonist: 'Second Lead Protagonist',
+  lead_antagonist: 'Lead Antagonist',
   supporting: 'Supporting Role',
+  co_lead: 'Co-Lead',
   background: 'Background Actor',
 };
 
@@ -47,7 +56,7 @@ function tierLabel(tier: string): string {
 }
 
 function roleLine(character: string, tier: string): string {
-  const tierText = tierLabel(tier || 'lead');
+  const tierText = tierLabel(tier || 'lead_protagonist');
   if (character && tierText) return `${character} · ${tierText}`;
   return character || tierText || '—';
 }
@@ -56,6 +65,8 @@ export function step3CastToMainCharacters(step3: Step3Shape | null): {
   id: string;
   name: string;
   role: string;
+  character: string;
+  tier: CastTier;
   description: string;
   imageUrl: null;
 }[] {
@@ -71,12 +82,16 @@ export function step3CastToMainCharacters(step3: Step3Shape | null): {
       const actorName = (row.actorName ?? '').trim();
       const actorEmail = (row.actorEmail ?? '').trim();
       const character = characterFromRow(row);
-      const tier = isCastTier((row.tier ?? '').trim()) ? (row.tier as CastTier) : 'lead';
+      const tier = isCastTier((row.tier ?? '').trim())
+        ? (row.tier as CastTier)
+        : 'lead_protagonist';
       const name = actorName || (/@/.test(actorEmail) ? '—' : actorEmail || '—');
       return {
         id: `cast-${i}`,
         name,
         role: roleLine(character, tier),
+        character,
+        tier,
         description: (row.characterDescription ?? '').trim(),
         imageUrl: null,
       };
@@ -110,7 +125,7 @@ export function wishListToCastingVoteOptions(wishListRaw: unknown): {
     .filter((row) => (row.actorName ?? '').trim())
     .map((row, index) => {
       const character = characterFromRow(row);
-      const tier = isCastTier((row.tier ?? '').trim()) ? row.tier! : 'lead';
+      const tier = isCastTier((row.tier ?? '').trim()) ? row.tier! : 'lead_protagonist';
       const status: WishListCastStatus =
         row.status === 'verified' ? 'verified' : 'wish_list';
       return {

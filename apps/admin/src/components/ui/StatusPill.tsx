@@ -10,6 +10,27 @@ const VARIANT_CLASS: Record<StatusVariant, string> = {
   purple: 'bg-violet-500/20 text-violet-300',
 };
 
+// Full class strings, not built from interpolated pieces: Tailwind's JIT scanner
+// only picks up arbitrary-value classes that appear literally in source.
+const VARIANT_ACCENT_CLASS: Record<StatusVariant, string> = {
+  neutral: 'shadow-[inset_3px_0_0_0_#ffffff33]',
+  warn: 'shadow-[inset_3px_0_0_0_#f59e0b]',
+  ok: 'shadow-[inset_3px_0_0_0_#10b981]',
+  bad: 'shadow-[inset_3px_0_0_0_#ef4444]',
+  info: 'shadow-[inset_3px_0_0_0_#0ea5e9]',
+  purple: 'shadow-[inset_3px_0_0_0_#8b5cf6]',
+};
+
+/**
+ * 3px left accent, matching the StatusPill variant. Apply to the row's
+ * first `<td>`, not the `<tr>` itself — box-shadow on a table-row element
+ * isn't reliably clipped to its own box in browsers, and can visually
+ * bleed over the row's `border-b` divider at the left corner.
+ */
+export function statusAccentClass(variant: StatusVariant): string {
+  return VARIANT_ACCENT_CLASS[variant];
+}
+
 export function statusVariant(status: string): StatusVariant {
   switch (status) {
     case 'pending_approval':
@@ -21,6 +42,25 @@ export function statusVariant(status: string): StatusVariant {
     default:
       return 'neutral';
   }
+}
+
+/** Same bg/text color pair as StatusPill, for reuse outside the pill shape (e.g. active tab state). */
+export function statusBadgeClass(variant: StatusVariant): string {
+  return VARIANT_CLASS[variant];
+}
+
+const VARIANT_TEXT_CLASS: Record<StatusVariant, string> = {
+  neutral: 'text-gray-400',
+  warn: 'text-amber-400/80',
+  ok: 'text-emerald-400/80',
+  bad: 'text-red-400/80',
+  info: 'text-sky-400/80',
+  purple: 'text-violet-400/80',
+};
+
+/** Text-only color for a variant, dimmed — for labels that should hint their status before being selected/activated. */
+export function statusTextClass(variant: StatusVariant): string {
+  return VARIANT_TEXT_CLASS[variant];
 }
 
 export function StatusPill({ label, variant }: { label: string; variant: StatusVariant }) {

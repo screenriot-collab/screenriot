@@ -74,6 +74,23 @@ export function FilmPageEditMeta({ form, setForm, slugDisplay }: Props) {
         />
       </div>
 
+      <div className="mt-6 max-w-6xl">
+        <label htmlFor="page-logline" className={CLASS_LABEL}>
+          Logline
+        </label>
+        <p className="mb-1 text-xs text-gray-500">
+          One-sentence pitch submitted by the filmmaker. Review and correct
+          before publishing - this is never edited elsewhere.
+        </p>
+        <input
+          id="page-logline"
+          type="text"
+          value={form.logline ?? ''}
+          onChange={(e) => setForm((p) => ({ ...p, logline: e.target.value }))}
+          className={CLASS_INPUT}
+        />
+      </div>
+
       <div className="mt-8">
         <label htmlFor="page-tags" className={CLASS_LABEL}>
           Tags (comma-separated)
@@ -90,8 +107,13 @@ export function FilmPageEditMeta({ form, setForm, slugDisplay }: Props) {
 
       <div className="mt-6">
         <label htmlFor="page-synopsis" className={CLASS_LABEL}>
-          Synopsis
+          Short synopsis
         </label>
+        <p className="mb-1 text-xs text-gray-500">
+          Used for film cards and search - not the Synopsis shown on the film
+          page itself. Edit that in the "Tab — Synopsis" section below
+          ("Story synopsis").
+        </p>
         <textarea
           id="page-synopsis"
           rows={4}

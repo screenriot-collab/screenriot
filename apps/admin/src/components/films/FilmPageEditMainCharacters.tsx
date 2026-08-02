@@ -7,7 +7,19 @@ import {
   CLASS_BTN_REMOVE,
   CLASS_ADD_LINK,
 } from '@/constants/styles';
-import type { FilmPageFormState } from '@/types/films';
+import { CAST_TIER_OPTIONS } from '@/constants/films';
+import { roleLine } from '@/lib/filmPageForm';
+import type { FilmPageFormState, MainCharacterForm } from '@/types/films';
+
+const DEFAULT_TIER = CAST_TIER_OPTIONS[0].value;
+
+function updateCharacterFields(
+  char: MainCharacterForm,
+  updates: Partial<Pick<MainCharacterForm, 'character' | 'tier'>>,
+): MainCharacterForm {
+  const next = { ...char, ...updates };
+  return { ...next, role: roleLine(next.character ?? '', next.tier ?? DEFAULT_TIER) };
+}
 
 type Props = {
   form: FilmPageFormState;
@@ -89,21 +101,46 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Role</label>
+                <label className="mb-1 block text-xs text-gray-400">Character</label>
                 <input
                   type="text"
-                  value={char.role}
+                  value={char.character ?? ''}
                   onChange={(e) =>
                     setForm((p) => ({
                       ...p,
                       mainCharacters: (p.mainCharacters ?? []).map((c) =>
-                        c.id === char.id ? { ...c, role: e.target.value } : c,
+                        c.id === char.id
+                          ? updateCharacterFields(c, { character: e.target.value })
+                          : c,
                       ),
                     }))
                   }
                   className={CLASS_INPUT_SM}
                   placeholder="e.g. Memory Trader"
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Role Type</label>
+                <select
+                  value={char.tier ?? DEFAULT_TIER}
+                  onChange={(e) =>
+                    setForm((p) => ({
+                      ...p,
+                      mainCharacters: (p.mainCharacters ?? []).map((c) =>
+                        c.id === char.id
+                          ? updateCharacterFields(c, { tier: e.target.value })
+                          : c,
+                      ),
+                    }))
+                  }
+                  className={CLASS_INPUT_SM}
+                >
+                  {CAST_TIER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="mt-3">
@@ -139,6 +176,8 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
                 id: `cast-${Date.now()}`,
                 name: '',
                 role: '',
+                character: '',
+                tier: DEFAULT_TIER,
                 description: '',
                 imageUrl: null,
                 actorEmail: '',

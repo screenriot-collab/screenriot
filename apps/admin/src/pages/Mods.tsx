@@ -1,21 +1,30 @@
 import { useState } from 'react';
 import { useTeamList } from '@/hooks/useTeamList';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { getCurrentUser, forgotPassword } from '@/lib/api';
 
 export default function Mods() {
   const currentUser = getCurrentUser();
   const { users, loading, error, setError, remove } = useTeamList();
+  const { requestConfirm, dialog } = useConfirmDialog();
   const [resetPasswordSent, setResetPasswordSent] = useState(false);
 
   const mods = users.filter((u) => u.role === 'manager');
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Remove this moderator from the team?')) return;
-    try {
-      await remove(id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
-    }
+  function handleDelete(id: string) {
+    requestConfirm({
+      title: 'Remove moderator',
+      message: 'Remove this moderator from the team?',
+      confirmLabel: 'Remove',
+      tone: 'danger',
+      onConfirm: async () => {
+        try {
+          await remove(id);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Delete failed');
+        }
+      },
+    });
   }
 
   async function handleResetPassword(email: string) {
@@ -95,6 +104,7 @@ export default function Mods() {
           </tbody>
         </table>
       </div>
+      {dialog}
     </>
   );
 }
