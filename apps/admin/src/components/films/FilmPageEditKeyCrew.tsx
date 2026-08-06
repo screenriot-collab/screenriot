@@ -10,6 +10,7 @@ import {
 } from '@/constants/styles';
 import { KEY_CREW_ROLE_OPTIONS } from '@/types/films';
 import { TmdbPersonSearchModal } from './TmdbPersonSearchModal';
+import { ImageUrlPickerModal } from './ImageUrlPickerModal';
 import type { FilmPageFormState, KeyCrewMemberForm } from '@/types/films';
 
 const DEFAULT_ROLE = KEY_CREW_ROLE_OPTIONS[0];
@@ -22,6 +23,8 @@ type Props = {
 export function FilmPageEditKeyCrew({ form, setForm }: Props) {
   const [tmdbSearchId, setTmdbSearchId] = useState<string | null>(null);
   const tmdbSearchMember = (form.keyCrew ?? []).find((c) => c.id === tmdbSearchId) ?? null;
+  const [imagePickerId, setImagePickerId] = useState<string | null>(null);
+  const imagePickerMember = (form.keyCrew ?? []).find((c) => c.id === imagePickerId) ?? null;
 
   function patchMember(id: string, patch: Partial<KeyCrewMemberForm>) {
     setForm((p) => ({
@@ -58,13 +61,23 @@ export function FilmPageEditKeyCrew({ form, setForm }: Props) {
           <li key={member.id} className={CLASS_CARD}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <span className="flex items-center gap-2 text-xs font-medium text-gray-400">
-                {member.imageUrl ? (
-                  <img src={member.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[11px] text-gray-500">
-                    {(member.name || '?').trim().charAt(0).toUpperCase()}
+                <button
+                  type="button"
+                  onClick={() => setImagePickerId(member.id)}
+                  className="group relative h-8 w-8 shrink-0 overflow-hidden rounded-full"
+                  aria-label={member.imageUrl ? 'Change photo' : 'Set photo'}
+                >
+                  {member.imageUrl ? (
+                    <img src={member.imageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center bg-white/10 text-[11px] text-gray-500">
+                      {(member.name || '?').trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-[7px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    Edit
                   </span>
-                )}
+                </button>
                 Crew Member
               </span>
               <button
@@ -160,6 +173,18 @@ export function FilmPageEditKeyCrew({ form, setForm }: Props) {
         onClose={() => setTmdbSearchId(null)}
         onApply={(patch) => {
           if (tmdbSearchId) patchMember(tmdbSearchId, patch);
+        }}
+      />
+
+      <ImageUrlPickerModal
+        open={imagePickerId !== null}
+        kind="person"
+        title="Set photo"
+        initialQuery={imagePickerMember?.name ?? ''}
+        currentUrl={imagePickerMember?.imageUrl}
+        onClose={() => setImagePickerId(null)}
+        onApply={(url) => {
+          if (imagePickerId) patchMember(imagePickerId, { imageUrl: url || null });
         }}
       />
     </section>
