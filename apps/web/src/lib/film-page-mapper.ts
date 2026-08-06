@@ -36,6 +36,22 @@ const EMPTY_SCREENPLAY_SCORE: ScreenplayScoreMock = {
   categories: [],
 };
 
+function mapAiAnalysis(pc: Record<string, unknown> | undefined): FilmDetailMock['aiAnalysis'] {
+  const raw = pc?.aiAnalysis as Record<string, unknown> | undefined;
+  if (!raw || typeof raw !== 'object') return EMPTY_AI_ANALYSIS;
+  return {
+    // maxScore is a fixed display constant (always out of 100) - it's never part of the admin-editable
+    // AiAnalysisForm, so it must not be read from pageContent (which never has it).
+    ...EMPTY_AI_ANALYSIS,
+    overallScore: typeof raw.overallScore === 'number' ? raw.overallScore : 0,
+    marketInsights: Array.isArray(raw.marketInsights) ? (raw.marketInsights as FilmDetailMock['aiAnalysis']['marketInsights']) : [],
+    teamTalent: Array.isArray(raw.teamTalent) ? (raw.teamTalent as FilmDetailMock['aiAnalysis']['teamTalent']) : [],
+    investmentMetrics: Array.isArray(raw.investmentMetrics)
+      ? (raw.investmentMetrics as FilmDetailMock['aiAnalysis']['investmentMetrics'])
+      : [],
+  };
+}
+
 function mapScreenplayScore(pc: Record<string, unknown> | undefined): ScreenplayScoreMock {
   const raw = pc?.screenplayScore as Record<string, unknown> | undefined;
   if (!raw || typeof raw !== 'object') return EMPTY_SCREENPLAY_SCORE;
@@ -192,7 +208,7 @@ export function apiFilmToFilmDetailMock(
     hasScreenplayScore: api.hasScreenplayScore ?? false,
     screenplayScore: mapScreenplayScore(pc),
     hasCommunityScore: api.hasCommunityScore ?? false,
-    aiAnalysis: (pc?.aiAnalysis as FilmDetailMock['aiAnalysis']) ?? EMPTY_AI_ANALYSIS,
+    aiAnalysis: mapAiAnalysis(pc),
     similarFilms: (Array.isArray(pc?.similarFilms) ? pc.similarFilms : []) as FilmDetailMock['similarFilms'],
     fanVoting: mapFanVoting(pc),
     treatment: (pc?.treatment as FilmDetailMock['treatment']) ?? { act1: '', act2: '' },
