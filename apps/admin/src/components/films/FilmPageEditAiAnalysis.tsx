@@ -8,6 +8,7 @@ import {
   CLASS_ADD_LINK,
 } from '@/constants/styles';
 import { TmdbMovieSearchModal } from './TmdbMovieSearchModal';
+import { ImageUrlPickerModal } from './ImageUrlPickerModal';
 import { buildAiAnalysisPrompt, parseAiAnalysisResponse } from '@/lib/aiAnalysisPrompt';
 import type { AdminFilm, AiAnalysisForm, FilmPageFormState, MetricForm } from '@/types/films';
 
@@ -98,6 +99,8 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
   const ai = form.aiAnalysis ?? defaultAi;
   const similar = form.similarFilms ?? [];
   const [tmdbSearchOpen, setTmdbSearchOpen] = useState(false);
+  const [posterPickerId, setPosterPickerId] = useState<string | null>(null);
+  const posterPickerFilm = similar.find((f) => f.id === posterPickerId) ?? null;
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const [pastedResponse, setPastedResponse] = useState('');
   const [applyError, setApplyError] = useState<string | null>(null);
@@ -243,13 +246,23 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
         <div className="space-y-3">
           {similar.map((film, index) => (
             <div key={film.id} className="flex gap-3 rounded-md border border-white/10 bg-admin-bg p-3">
-              {film.posterUrl ? (
-                <img src={film.posterUrl} alt="" className="h-24 w-16 shrink-0 rounded object-cover" />
-              ) : (
-                <span className="flex h-24 w-16 shrink-0 items-center justify-center rounded bg-white/10 text-xs text-gray-500">
-                  No poster
+              <button
+                type="button"
+                onClick={() => setPosterPickerId(film.id)}
+                className="group relative h-24 w-16 shrink-0 overflow-hidden rounded"
+                aria-label={film.posterUrl ? 'Change poster' : 'Set poster'}
+              >
+                {film.posterUrl ? (
+                  <img src={film.posterUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center bg-white/10 text-xs text-gray-500">
+                    No poster
+                  </span>
+                )}
+                <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-[10px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  {film.posterUrl ? 'Change' : 'Set poster'}
                 </span>
-              )}
+              </button>
               <div className="grid flex-1 gap-2 sm:grid-cols-3">
                 {(['title', 'boxOffice', 'roi', 'rating'] as const).map((field) => (
                   <input
@@ -335,6 +348,24 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
               similarFilms: [...(p.similarFilms ?? []), film],
             }))
           }
+        />
+
+        <ImageUrlPickerModal
+          open={posterPickerId !== null}
+          kind="movie"
+          title="Set poster"
+          initialQuery={posterPickerFilm?.title ?? ''}
+          currentUrl={posterPickerFilm?.posterUrl}
+          onClose={() => setPosterPickerId(null)}
+          onApply={(url) => {
+            if (!posterPickerId) return;
+            setForm((p) => ({
+              ...p,
+              similarFilms: (p.similarFilms ?? []).map((f) =>
+                f.id === posterPickerId ? { ...f, posterUrl: url || undefined } : f,
+              ),
+            }));
+          }}
         />
       </section>
     </>
