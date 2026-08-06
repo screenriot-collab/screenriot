@@ -14,18 +14,29 @@ export type AiAnalysisDraft = {
 };
 
 const RESPONSE_SHAPE_EXAMPLE = `{
-  "overallScore": 78,
+  "overallScore": 88,
   "marketInsights": [
-    { "label": "Genre demand", "value": "High", "description": "Sci-fi thrillers have performed well at the box office over the last 3 years." }
+    { "label": "Popularity & Trend", "value": "87", "description": "Based on similar films' performance" },
+    { "label": "Global Appeal", "value": "82", "description": "Strong international resonance" },
+    { "label": "Fan Buzz", "value": "91", "description": "High social media engagement" },
+    { "label": "Topicality", "value": "88", "description": "Aligns with current trends" },
+    { "label": "Genre Insights", "value": "Strong", "description": "Sci-Fi Thriller trending +24% in North America, +18% internationally" }
   ],
   "teamTalent": [
-    { "label": "Director track record", "value": "Strong", "description": "Prior work has performed well critically and commercially." }
+    { "label": "Crew Experience", "value": "89", "description": "Proven track record in genre" },
+    { "label": "Talent Draw", "value": "85", "description": "Strong cast & crew appeal" },
+    { "label": "Series Potential", "value": "High", "description": "Franchise opportunity identified" }
   ],
   "investmentMetrics": [
-    { "label": "Estimated ROI", "value": "2.5x", "description": "Based on comparable budget-to-box-office ratios for similar films." }
+    { "label": "Expected Return", "value": "18-24%", "description": "Conservative projection" },
+    { "label": "Investment Risk", "value": "Medium", "description": "Balanced risk-reward profile" },
+    { "label": "Community Interest", "value": "93", "description": "Exceptional fan enthusiasm" },
+    { "label": "Festival / Awards", "value": "78", "description": "Good recognition potential" },
+    { "label": "Platform Suitability", "value": "Excellent", "description": "Fits streaming platforms' runtime and format" }
   ],
   "similarFilms": [
-    { "title": "Arrival", "boxOffice": "$203M", "roi": "5.8x", "rating": "8.0", "matchPercent": 82 }
+    { "title": "Ex Machina", "boxOffice": "$36.9M", "roi": "8.5x", "rating": "92% Critical", "matchPercent": 94 },
+    { "title": "Inception", "boxOffice": "$836M", "roi": "5.2x", "rating": "87% Critical", "matchPercent": 89 }
   ]
 }`;
 
@@ -64,7 +75,8 @@ export function buildAiAnalysisPrompt(film: AdminFilm): string {
     '',
     'Rules:',
     '- Give reasonable analyst estimates, not fabricated precision - it is fine to reason from genre/budget comparables.',
-    '- "similarFilms" must be real, actually released films comparable in genre, tone, or budget, with their real box office and rating figures.',
+    '- Each metric\'s "value" can be a 0-100 score (as a string) or a short qualitative label (e.g. "High", "Medium", "18-24%") - whichever fits that metric better.',
+    '- "similarFilms" must be real, actually released films comparable in genre, tone, or budget, with their real box office, and "rating" as a critic-score percentage (e.g. "92% Critical"), not a /10 score.',
     '- 3-5 items per array unless there is not enough basis for that many.',
     '- Respond with ONLY a JSON object matching this exact shape - no markdown code fences, no commentary before or after:',
     RESPONSE_SHAPE_EXAMPLE,
