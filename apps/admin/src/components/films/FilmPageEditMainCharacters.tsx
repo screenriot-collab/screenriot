@@ -11,6 +11,7 @@ import {
 import { CAST_TIER_OPTIONS } from '@/constants/films';
 import { roleLine } from '@/lib/filmPageForm';
 import { TmdbPersonSearchModal } from './TmdbPersonSearchModal';
+import { ImageUrlPickerModal } from './ImageUrlPickerModal';
 import type { FilmPageFormState, MainCharacterForm } from '@/types/films';
 
 const DEFAULT_TIER = CAST_TIER_OPTIONS[0].value;
@@ -31,6 +32,8 @@ type Props = {
 export function FilmPageEditMainCharacters({ form, setForm }: Props) {
   const [tmdbSearchId, setTmdbSearchId] = useState<string | null>(null);
   const tmdbSearchChar = (form.mainCharacters ?? []).find((c) => c.id === tmdbSearchId) ?? null;
+  const [imagePickerId, setImagePickerId] = useState<string | null>(null);
+  const imagePickerChar = (form.mainCharacters ?? []).find((c) => c.id === imagePickerId) ?? null;
 
   function patchCharacter(id: string, patch: Partial<MainCharacterForm>) {
     setForm((p) => ({
@@ -57,13 +60,23 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
           <li key={char.id} className={CLASS_CARD}>
             <div className="mb-3 flex items-center justify-between gap-2">
               <span className="flex items-center gap-2 text-xs font-medium text-gray-400">
-                {char.imageUrl ? (
-                  <img src={char.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[11px] text-gray-500">
-                    {(char.name || '?').trim().charAt(0).toUpperCase()}
+                <button
+                  type="button"
+                  onClick={() => setImagePickerId(char.id)}
+                  className="group relative h-8 w-8 shrink-0 overflow-hidden rounded-full"
+                  aria-label={char.imageUrl ? 'Change photo' : 'Set photo'}
+                >
+                  {char.imageUrl ? (
+                    <img src={char.imageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center bg-white/10 text-[11px] text-gray-500">
+                      {(char.name || '?').trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-[7px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    Edit
                   </span>
-                )}
+                </button>
                 Character
               </span>
               <button
@@ -222,6 +235,18 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
         onClose={() => setTmdbSearchId(null)}
         onApply={(patch) => {
           if (tmdbSearchId) patchCharacter(tmdbSearchId, patch);
+        }}
+      />
+
+      <ImageUrlPickerModal
+        open={imagePickerId !== null}
+        kind="person"
+        title="Set photo"
+        initialQuery={imagePickerChar?.name ?? ''}
+        currentUrl={imagePickerChar?.imageUrl}
+        onClose={() => setImagePickerId(null)}
+        onApply={(url) => {
+          if (imagePickerId) patchCharacter(imagePickerId, { imageUrl: url || null });
         }}
       />
     </section>
