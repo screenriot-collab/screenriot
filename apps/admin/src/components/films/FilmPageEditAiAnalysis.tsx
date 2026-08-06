@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import {
   CLASS_INPUT_SM,
   CLASS_SECTION,
   CLASS_SECTION_TITLE,
+  CLASS_SECTION_DESC,
   CLASS_BTN_REMOVE,
   CLASS_ADD_LINK,
 } from '@/constants/styles';
+import { TmdbMovieSearchModal } from './TmdbMovieSearchModal';
 import type { AiAnalysisForm, FilmPageFormState, MetricForm } from '@/types/films';
 
 type Props = {
@@ -92,6 +95,7 @@ function MetricList({
 export function FilmPageEditAiAnalysis({ form, setForm }: Props) {
   const ai = form.aiAnalysis ?? defaultAi;
   const similar = form.similarFilms ?? [];
+  const [tmdbSearchOpen, setTmdbSearchOpen] = useState(false);
 
   return (
     <>
@@ -159,77 +163,107 @@ export function FilmPageEditAiAnalysis({ form, setForm }: Props) {
         <h2 id="section-similar-films" className={CLASS_SECTION_TITLE}>
           Similar films (inside AI section)
         </h2>
+        <p className={CLASS_SECTION_DESC}>
+          The plan is for this list to eventually be generated automatically by AI. For now, add entries by
+          hand, or look one up on TMDB below — either way fills the same fields. ROI and Match % are our own
+          scoring, not TMDB data, so they stay manual either way.
+        </p>
         <div className="space-y-3">
           {similar.map((film, index) => (
-            <div key={film.id} className="grid gap-2 rounded-md border border-white/10 bg-admin-bg p-3 sm:grid-cols-3">
-              {(['title', 'boxOffice', 'roi', 'rating'] as const).map((field) => (
+            <div key={film.id} className="flex gap-3 rounded-md border border-white/10 bg-admin-bg p-3">
+              {film.posterUrl ? (
+                <img src={film.posterUrl} alt="" className="h-24 w-16 shrink-0 rounded object-cover" />
+              ) : (
+                <span className="flex h-24 w-16 shrink-0 items-center justify-center rounded bg-white/10 text-xs text-gray-500">
+                  No poster
+                </span>
+              )}
+              <div className="grid flex-1 gap-2 sm:grid-cols-3">
+                {(['title', 'boxOffice', 'roi', 'rating'] as const).map((field) => (
+                  <input
+                    key={field}
+                    type="text"
+                    value={film[field]}
+                    placeholder={field}
+                    onChange={(e) =>
+                      setForm((p) => {
+                        const list = [...(p.similarFilms ?? [])];
+                        list[index] = { ...list[index], [field]: e.target.value };
+                        return { ...p, similarFilms: list };
+                      })
+                    }
+                    className={CLASS_INPUT_SM}
+                  />
+                ))}
                 <input
-                  key={field}
-                  type="text"
-                  value={film[field]}
-                  placeholder={field}
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={film.matchPercent}
+                  placeholder="Match %"
                   onChange={(e) =>
                     setForm((p) => {
                       const list = [...(p.similarFilms ?? [])];
-                      list[index] = { ...list[index], [field]: e.target.value };
+                      list[index] = { ...list[index], matchPercent: Number(e.target.value) };
                       return { ...p, similarFilms: list };
                     })
                   }
                   className={CLASS_INPUT_SM}
                 />
-              ))}
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={film.matchPercent}
-                placeholder="Match %"
-                onChange={(e) =>
-                  setForm((p) => {
-                    const list = [...(p.similarFilms ?? [])];
-                    list[index] = { ...list[index], matchPercent: Number(e.target.value) };
-                    return { ...p, similarFilms: list };
-                  })
-                }
-                className={CLASS_INPUT_SM}
-              />
-              <button
-                type="button"
-                className={CLASS_BTN_REMOVE}
-                onClick={() =>
-                  setForm((p) => ({
-                    ...p,
-                    similarFilms: (p.similarFilms ?? []).filter((_, i) => i !== index),
-                  }))
-                }
-              >
-                Remove
-              </button>
+                <button
+                  type="button"
+                  className={CLASS_BTN_REMOVE}
+                  onClick={() =>
+                    setForm((p) => ({
+                      ...p,
+                      similarFilms: (p.similarFilms ?? []).filter((_, i) => i !== index),
+                    }))
+                  }
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
-          <button
-            type="button"
-            className={CLASS_ADD_LINK}
-            onClick={() =>
-              setForm((p) => ({
-                ...p,
-                similarFilms: [
-                  ...(p.similarFilms ?? []),
-                  {
-                    id: `similar-${Date.now()}`,
-                    title: '',
-                    boxOffice: '',
-                    roi: '',
-                    rating: '',
-                    matchPercent: 0,
-                  },
-                ],
-              }))
-            }
-          >
-            + Add similar film
-          </button>
+          <div className="flex flex-wrap gap-4">
+            <button
+              type="button"
+              className={CLASS_ADD_LINK}
+              onClick={() =>
+                setForm((p) => ({
+                  ...p,
+                  similarFilms: [
+                    ...(p.similarFilms ?? []),
+                    {
+                      id: `similar-${Date.now()}`,
+                      title: '',
+                      boxOffice: '',
+                      roi: '',
+                      rating: '',
+                      matchPercent: 0,
+                    },
+                  ],
+                }))
+              }
+            >
+              + Add similar film
+            </button>
+            <button type="button" className={CLASS_ADD_LINK} onClick={() => setTmdbSearchOpen(true)}>
+              + Add similar film (search TMDB)
+            </button>
+          </div>
         </div>
+
+        <TmdbMovieSearchModal
+          open={tmdbSearchOpen}
+          onClose={() => setTmdbSearchOpen(false)}
+          onAdd={(film) =>
+            setForm((p) => ({
+              ...p,
+              similarFilms: [...(p.similarFilms ?? []), film],
+            }))
+          }
+        />
       </section>
     </>
   );

@@ -98,6 +98,35 @@ export function step3CastToMainCharacters(step3: Step3Shape | null): {
     });
 }
 
+type Step3CrewRow = {
+  name?: string;
+  position?: string;
+  email?: string;
+};
+
+/** Pre-fills the Key Crew editor from the application's Step 3 crew list. Role defaults to "Other" when no position was given. */
+export function step3CrewToKeyCrew(step3: Step3Shape | null): {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  email?: string;
+  imageUrl: null;
+}[] {
+  const crew = (step3?.crew ?? []) as Step3CrewRow[];
+  return crew
+    .filter((row) => (row.name ?? '').trim() || (row.position ?? '').trim() || (row.email ?? '').trim())
+    .map((row, i) => ({
+      id: `crew-${i}`,
+      name: (row.name ?? '').trim() || '—',
+      role: (row.position ?? '').trim() || 'Other',
+      // Not present on the application's Step 3 crew list — filled in later, same as Main Characters' description.
+      description: '',
+      email: (row.email ?? '').trim() || undefined,
+      imageUrl: null,
+    }));
+}
+
 function normalizeWishListRows(raw: unknown): WishListRow[] {
   if (Array.isArray(raw)) return raw as WishListRow[];
   if (typeof raw === 'string' && raw.trim()) {

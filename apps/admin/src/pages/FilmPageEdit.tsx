@@ -8,6 +8,7 @@ import {
   FilmPageEditPledgeVoting,
   FilmPageEditTreatment,
   FilmPageEditMainCharacters,
+  FilmPageEditKeyCrew,
   FilmPageEditSampleScenes,
   FilmPageEditScreenplayScore,
   FilmPageEditAiAnalysis,
@@ -97,6 +98,23 @@ export default function FilmPageEdit() {
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 max-w-6xl">
+        <div className="fixed right-6 top-4 z-20 flex gap-2 rounded-md border border-white/10 bg-admin-bg/95 p-2 shadow-lg backdrop-blur">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-md bg-admin-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-admin-accent/90 disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/film-pages')}
+            className="rounded-md border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5"
+          >
+            Cancel
+          </button>
+        </div>
+
         <FilmPageEditMeta
           form={form}
           setForm={setForm}
@@ -117,6 +135,8 @@ export default function FilmPageEdit() {
 
         <FilmPageEditMainCharacters form={form} setForm={setForm} />
 
+        <FilmPageEditKeyCrew form={form} setForm={setForm} />
+
         <FilmPageEditSampleScenes form={form} setForm={setForm} />
 
         <FilmPageEditScreenplayScore form={form} setForm={setForm} />
@@ -132,23 +152,6 @@ export default function FilmPageEdit() {
         <FilmPageEditUpdates form={form} setForm={setForm} />
 
         <FilmPageEditInvestmentTiers form={form} setForm={setForm} />
-
-        <div className="flex gap-2 pt-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-md bg-admin-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-admin-accent/90 disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/film-pages')}
-            className="rounded-md border border-white/10 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5"
-          >
-            Cancel
-          </button>
-        </div>
       </form>
     </>
   );

@@ -17,6 +17,8 @@ export type SimilarFilm = {
   roi: string;
   rating: string;
   matchPercent: number;
+  /** TMDB poster link — optional, older/manually-entered entries may not have one. */
+  posterUrl?: string;
 };
 
 export type VotingCategory = {
@@ -79,6 +81,14 @@ export type CommunityDiscussionMock = {
 };
 
 export type CharacterMock = {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  imageUrl: string | null;
+};
+
+export type KeyCrewMemberMock = {
   id: string;
   name: string;
   role: string;
@@ -227,6 +237,9 @@ export type FilmDetailMock = {
   communityDiscussion: CommunityDiscussionMock;
   treatment: TreatmentMock;
   mainCharacters: CharacterMock[];
+  keyCrew: KeyCrewMemberMock[];
+  /** Whether the Key Crew block should render — set by the admin, independent of whether it's filled in. */
+  keyCrewVisible: boolean;
   sampleScenes: SampleScenesMock;
   rateStory: RateStoryMock;
   tabbedSection: TabbedSectionMock;
@@ -350,6 +363,33 @@ const MAIN_CHARACTERS: CharacterMock[] = [
     role: 'MindCorp Enforcer',
     description:
       "A ruthless corporate hunter tasked with protecting the conspiracy at any cost—until she begins to question what she's protecting.",
+    imageUrl: null,
+  },
+];
+
+const KEY_CREW: KeyCrewMemberMock[] = [
+  {
+    id: '1',
+    name: 'Jordan Blake',
+    role: 'Director',
+    description:
+      'Award-winning director known for character-driven dramas and a distinctive visual style, with over a decade of experience across feature films and television.',
+    imageUrl: null,
+  },
+  {
+    id: '2',
+    name: 'Priya Nair',
+    role: 'Screenwriter',
+    description:
+      'Screenwriter with a background in literary fiction, bringing sharp dialogue and emotionally grounded storytelling to every project.',
+    imageUrl: null,
+  },
+  {
+    id: '3',
+    name: 'Sam Okafor',
+    role: 'Cinematographer',
+    description:
+      'Cinematographer recognized for bold lighting choices and immersive camera work on both independent and studio productions.',
     imageUrl: null,
   },
 ];
@@ -507,6 +547,8 @@ export function getFilmDetailMock(slug: string): FilmDetailMock {
     communityDiscussion: COMMUNITY_DISCUSSION,
     treatment: TREATMENT,
     mainCharacters: MAIN_CHARACTERS,
+    keyCrew: KEY_CREW,
+    keyCrewVisible: true,
     sampleScenes: SAMPLE_SCENES,
     rateStory: RATE_STORY,
     tabbedSection: TABBED_SECTION,
