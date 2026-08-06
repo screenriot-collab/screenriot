@@ -147,6 +147,7 @@ function keyCrewFromDetail(
       id: c.id ?? `crew-${Math.random().toString(36).slice(2, 9)}`,
       name: c.name ?? '',
       role: c.role ?? 'Other',
+      description: c.description ?? '',
       email: c.email ?? undefined,
       imageUrl: c.imageUrl ?? null,
       tmdbBio: c.tmdbBio,
@@ -158,6 +159,7 @@ function keyCrewFromDetail(
     id: `crew-${i}`,
     name: (row.name ?? '').trim() || '—',
     role: (row.position ?? '').trim() || 'Other',
+    description: '',
     email: (row.email ?? '').trim() || undefined,
     imageUrl: null,
   }));

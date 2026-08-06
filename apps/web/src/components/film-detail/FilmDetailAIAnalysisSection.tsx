@@ -107,13 +107,11 @@ export function FilmDetailAIAnalysisSection({
       {similarFilms.length > 0 ? (
         <div className="mt-6 border-t border-screenriot-accent/20 pt-6">
           <SectionHeading>Similar Successful Films</SectionHeading>
-          <ul className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {similarFilms.map((f) => (
-              <li key={f.id}>
-                <FilmDetailSimilarCard film={f} />
-              </li>
+              <FilmDetailSimilarCard key={f.id} film={f} />
             ))}
-          </ul>
+          </div>
         </div>
       ) : null}
     </section>

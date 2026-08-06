@@ -109,6 +109,7 @@ export function step3CrewToKeyCrew(step3: Step3Shape | null): {
   id: string;
   name: string;
   role: string;
+  description: string;
   email?: string;
   imageUrl: null;
 }[] {
@@ -119,6 +120,8 @@ export function step3CrewToKeyCrew(step3: Step3Shape | null): {
       id: `crew-${i}`,
       name: (row.name ?? '').trim() || '—',
       role: (row.position ?? '').trim() || 'Other',
+      // Not present on the application's Step 3 crew list — filled in later, same as Main Characters' description.
+      description: '',
       email: (row.email ?? '').trim() || undefined,
       imageUrl: null,
     }));

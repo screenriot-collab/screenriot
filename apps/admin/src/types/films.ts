@@ -283,6 +283,8 @@ export type KeyCrewMemberForm = {
   id: string;
   name: string;
   role: KeyCrewRole | string;
+  /** Shown on the public film page — same field as Main Characters' description, filled in here (not sourced from the application). */
+  description: string;
   email?: string;
   imageUrl?: string | null;
   tmdbBio?: string;

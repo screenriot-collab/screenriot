@@ -124,6 +124,16 @@ export function FilmPageEditKeyCrew({ form, setForm }: Props) {
                 />
               </div>
             </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs text-gray-400">Description</label>
+              <textarea
+                rows={3}
+                value={member.description}
+                onChange={(e) => patchMember(member.id, { description: e.target.value })}
+                className={CLASS_INPUT_SM}
+                placeholder="Short bio (shown on film page with Read more / Show less)"
+              />
+            </div>
           </li>
         ))}
       </ul>
@@ -135,7 +145,7 @@ export function FilmPageEditKeyCrew({ form, setForm }: Props) {
             ...p,
             keyCrew: [
               ...(p.keyCrew ?? []),
-              { id: `crew-${Date.now()}`, name: '', role: DEFAULT_ROLE, email: '', imageUrl: null },
+              { id: `crew-${Date.now()}`, name: '', role: DEFAULT_ROLE, description: '', email: '', imageUrl: null },
             ],
           }))
         }

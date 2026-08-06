@@ -197,6 +197,8 @@ export function apiFilmToFilmDetailMock(
     fanVoting: mapFanVoting(pc),
     treatment: (pc?.treatment as FilmDetailMock['treatment']) ?? { act1: '', act2: '' },
     mainCharacters: (Array.isArray(pc?.mainCharacters) ? pc.mainCharacters : []) as FilmDetailMock['mainCharacters'],
+    keyCrew: (Array.isArray(pc?.keyCrew) ? pc.keyCrew : []) as FilmDetailMock['keyCrew'],
+    keyCrewVisible: pc?.keyCrewVisible === true,
     sampleScenes: mapSampleScenes(pc),
     rateStory: (pc?.rateStory as FilmDetailMock['rateStory']) ?? {
       title: 'Rate the Story & Characters',
