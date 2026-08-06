@@ -7,6 +7,7 @@ import { UpdateFilmReviewDto } from './dto/update-film-review.dto';
 import { UpdateFilmPageDto } from './dto/update-film-page.dto';
 import {
   step3CastToMainCharacters,
+  step3CrewToKeyCrew,
   wishListToCastingVoteOptions,
   type Step3Shape,
 } from '../films/cast-step3.util';
@@ -276,6 +277,7 @@ export class AdminFilmsService {
 
     const step3 = film.step3 as Step3Shape | null;
     const mainCharacters = step3CastToMainCharacters(step3);
+    const keyCrew = step3CrewToKeyCrew(step3);
     const castingVoteCast = wishListToCastingVoteOptions(step3?.wishListCast ?? null);
 
     // budgetBreakdown is not stored here; public API reads it from step4.breakdown
@@ -297,6 +299,9 @@ export class AdminFilmsService {
       },
       treatment: { act1: film.synopsis ?? '', act2: '' },
       mainCharacters,
+      keyCrew,
+      // Hidden by default: freshly copied from the application, not reviewed yet.
+      keyCrewVisible: false,
       sampleScenes: {
         title: 'Script Sample',
         unlockMessage: 'Sample scenes will be published when the filmmaker adds them.',

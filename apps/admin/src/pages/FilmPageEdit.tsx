@@ -8,6 +8,7 @@ import {
   FilmPageEditPledgeVoting,
   FilmPageEditTreatment,
   FilmPageEditMainCharacters,
+  FilmPageEditKeyCrew,
   FilmPageEditSampleScenes,
   FilmPageEditScreenplayScore,
   FilmPageEditAiAnalysis,
@@ -116,6 +117,8 @@ export default function FilmPageEdit() {
         <FilmPageEditTreatment form={form} setForm={setForm} />
 
         <FilmPageEditMainCharacters form={form} setForm={setForm} />
+
+        <FilmPageEditKeyCrew form={form} setForm={setForm} />
 
         <FilmPageEditSampleScenes form={form} setForm={setForm} />
 

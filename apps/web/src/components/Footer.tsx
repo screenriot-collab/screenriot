@@ -112,6 +112,9 @@ export function Footer() {
           © {new Date().getFullYear()} Screen Riot. All rights reserved. Built
           on blockchain technology with regulatory compliance.
         </p>
+        <p className="mt-2 text-center text-xs text-screenriot-muted">
+          This product uses the TMDB API but is not endorsed or certified by TMDB.
+        </p>
       </div>
     </footer>
   );

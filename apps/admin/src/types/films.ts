@@ -151,6 +151,12 @@ export type MainCharacterForm = {
   description: string;
   imageUrl?: string | null;
   actorEmail?: string;
+  /** Fields below are optional TMDB enrichment — stored for future use even where the public page doesn't render them yet. */
+  tmdbBio?: string;
+  tmdbBirthday?: string;
+  tmdbPlaceOfBirth?: string;
+  tmdbAlsoKnownAs?: string[];
+  tmdbPopularity?: number;
 };
 
 export type CastingVoteOptionForm = {
@@ -209,6 +215,8 @@ export type SimilarFilmForm = {
   roi: string;
   rating: string;
   matchPercent: number;
+  /** TMDB poster link — stored as a URL, not re-hosted, per TMDB's free CDN usage. Not yet shown on the public page. */
+  posterUrl?: string;
 };
 
 export type ScreenplayScoreCategoryForm = {
@@ -267,6 +275,21 @@ export type InvestmentTierForm = {
   investorsCount?: number;
 };
 
+export const KEY_CREW_ROLE_OPTIONS = ['Director', 'Screenwriter', 'Cinematographer', 'Other'] as const;
+export type KeyCrewRole = (typeof KEY_CREW_ROLE_OPTIONS)[number];
+
+/** One key crew member (Director / Screenwriter / Cinematographer) for the film page. Pre-filled from the application's Step 3 crew list, then editable here. */
+export type KeyCrewMemberForm = {
+  id: string;
+  name: string;
+  role: KeyCrewRole | string;
+  email?: string;
+  imageUrl?: string | null;
+  tmdbBio?: string;
+  tmdbBirthday?: string;
+  tmdbPlaceOfBirth?: string;
+};
+
 /** Film page edit form state (includes slug for display and pageContent-derived fields). */
 export type FilmPageFormState = FilmPageUpdate & {
   slug?: string;
@@ -275,6 +298,9 @@ export type FilmPageFormState = FilmPageUpdate & {
   whyMatters?: string;
   tags?: string;
   mainCharacters?: MainCharacterForm[];
+  keyCrew?: KeyCrewMemberForm[];
+  /** Whether the Key Crew block is shown on the public film page — separate from whether it's filled in. */
+  keyCrewVisible?: boolean;
   castingVote?: CastingVoteForm;
   productionTitle?: string;
   productionStages?: ProductionStageForm[];

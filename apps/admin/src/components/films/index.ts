@@ -4,6 +4,7 @@ export { FilmPageEditTrending } from './FilmPageEditTrending';
 export { FilmPageEditPledgeVoting } from './FilmPageEditPledgeVoting';
 export { FilmPageEditTreatment } from './FilmPageEditTreatment';
 export { FilmPageEditMainCharacters } from './FilmPageEditMainCharacters';
+export { FilmPageEditKeyCrew } from './FilmPageEditKeyCrew';
 export { FilmPageEditSampleScenes } from './FilmPageEditSampleScenes';
 export { FilmPageEditScreenplayScore } from './FilmPageEditScreenplayScore';
 export { FilmPageEditAiAnalysis } from './FilmPageEditAiAnalysis';
