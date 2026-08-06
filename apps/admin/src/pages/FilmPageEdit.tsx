@@ -141,7 +141,7 @@ export default function FilmPageEdit() {
 
         <FilmPageEditScreenplayScore form={form} setForm={setForm} />
 
-        <FilmPageEditAiAnalysis form={form} setForm={setForm} />
+        <FilmPageEditAiAnalysis film={film} form={form} setForm={setForm} />
 
         <FilmPageEditSynopsisTab form={form} setForm={setForm} film={film} />
 

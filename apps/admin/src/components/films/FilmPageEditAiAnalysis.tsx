@@ -8,9 +8,11 @@ import {
   CLASS_ADD_LINK,
 } from '@/constants/styles';
 import { TmdbMovieSearchModal } from './TmdbMovieSearchModal';
-import type { AiAnalysisForm, FilmPageFormState, MetricForm } from '@/types/films';
+import { buildAiAnalysisPrompt, parseAiAnalysisResponse } from '@/lib/aiAnalysisPrompt';
+import type { AdminFilm, AiAnalysisForm, FilmPageFormState, MetricForm } from '@/types/films';
 
 type Props = {
+  film: AdminFilm;
   form: FilmPageFormState;
   setForm: React.Dispatch<React.SetStateAction<FilmPageFormState>>;
 };
@@ -92,13 +94,83 @@ function MetricList({
   );
 }
 
-export function FilmPageEditAiAnalysis({ form, setForm }: Props) {
+export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
   const ai = form.aiAnalysis ?? defaultAi;
   const similar = form.similarFilms ?? [];
   const [tmdbSearchOpen, setTmdbSearchOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [pastedResponse, setPastedResponse] = useState('');
+  const [applyError, setApplyError] = useState<string | null>(null);
+
+  async function handleCopyPrompt() {
+    try {
+      await navigator.clipboard.writeText(buildAiAnalysisPrompt(film));
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('error');
+    }
+    setTimeout(() => setCopyStatus('idle'), 2000);
+  }
+
+  function handleApplyResponse() {
+    setApplyError(null);
+    try {
+      const draft = parseAiAnalysisResponse(pastedResponse);
+      setForm((p) => ({
+        ...p,
+        aiAnalysis: draft.aiAnalysis,
+        similarFilms: [...(p.similarFilms ?? []), ...draft.similarFilms],
+      }));
+      setPastedResponse('');
+    } catch (err) {
+      setApplyError(err instanceof Error ? err.message : 'Could not read that response.');
+    }
+  }
 
   return (
     <>
+      <section className={CLASS_SECTION} aria-labelledby="section-ai-analysis-assistant">
+        <h2 id="section-ai-analysis-assistant" className={CLASS_SECTION_TITLE}>
+          AI Analysis Assistant (manual)
+        </h2>
+        <p className={CLASS_SECTION_DESC}>
+          MVP stand-in until a real analytics vendor is integrated. Copy the prompt below, run it in any
+          LLM you have access to (Claude, ChatGPT, etc.), then paste the JSON response back here to fill in
+          the fields below. Nothing is sent from this app - review and edit before saving.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" onClick={handleCopyPrompt} className={CLASS_ADD_LINK}>
+            Copy prompt
+          </button>
+          {copyStatus === 'copied' && <span className="text-xs text-green-400">Copied to clipboard.</span>}
+          {copyStatus === 'error' && (
+            <span className="text-xs text-red-400">Could not copy - copy it manually from the console.</span>
+          )}
+        </div>
+        <div className="mt-4">
+          <label htmlFor="ai-response-paste" className="mb-1 block text-xs text-gray-400">
+            Paste the AI&apos;s JSON response here
+          </label>
+          <textarea
+            id="ai-response-paste"
+            rows={6}
+            value={pastedResponse}
+            onChange={(e) => setPastedResponse(e.target.value)}
+            className={CLASS_INPUT_SM}
+            placeholder='{ "overallScore": 78, "marketInsights": [...], ... }'
+          />
+          {applyError && <p className="mt-1 text-xs text-red-400">{applyError}</p>}
+          <button
+            type="button"
+            onClick={handleApplyResponse}
+            disabled={!pastedResponse.trim()}
+            className="mt-2 rounded bg-admin-accent/15 px-2.5 py-1 text-xs font-medium text-admin-accent transition-colors hover:bg-admin-accent/25 disabled:opacity-50"
+          >
+            Apply to fields below
+          </button>
+        </div>
+      </section>
+
       <section className={CLASS_SECTION} aria-labelledby="section-ai-analysis">
         <h2 id="section-ai-analysis" className={CLASS_SECTION_TITLE}>
           AI Market Analysis
