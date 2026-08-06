@@ -11,6 +11,7 @@ import { AdminContributionsController } from './admin-contributions.controller';
 import { AdminScriptCreditsController } from './admin-script-credits.controller';
 import { AdminSubmissionFeesController } from './admin-submission-fees.controller';
 import { AdminCastingSuggestionsController } from './admin-casting-suggestions.controller';
+import { AdminTmdbController } from './admin-tmdb.controller';
 import { AdminFilmsService } from './admin-films.service';
 import { AdminUsersService } from './admin-users.service';
 import { AdminVerificationService } from './admin-verification.service';
@@ -42,6 +43,7 @@ import { DonationsModule } from '../donations/donations.module';
     AdminScriptCreditsController,
     AdminSubmissionFeesController,
     AdminCastingSuggestionsController,
+    AdminTmdbController,
   ],
   providers: [
     AdminFilmsService,

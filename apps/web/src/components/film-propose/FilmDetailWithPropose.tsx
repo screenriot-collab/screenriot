@@ -10,6 +10,7 @@ import { FilmDetailAIAnalysisSection } from '@/components/film-detail/FilmDetail
 import { FilmDetailFanVotingSection } from '@/components/film-detail/FilmDetailFanVotingSection';
 import { FilmDetailCommunityDiscussionSection } from '@/components/film-detail/FilmDetailCommunityDiscussionSection';
 import { FilmDetailStoryCharactersSection } from '@/components/film-detail/FilmDetailStoryCharactersSection';
+import { FilmDetailKeyCrewSection } from '@/components/film-detail/FilmDetailKeyCrewSection';
 import { FilmDetailSampleScenesSection } from '@/components/film-detail/FilmDetailSampleScenesSection';
 import { FilmDetailTabbedSection } from '@/components/film-detail/FilmDetailTabbedSection';
 import { FilmDetailSidebar } from '@/components/film-detail/FilmDetailSidebar';
@@ -76,6 +77,11 @@ export function FilmDetailWithPropose({
                 characters={film.mainCharacters}
               />
             </div>
+            {film.keyCrewVisible && film.keyCrew.length > 0 ? (
+              <div className="mt-10">
+                <FilmDetailKeyCrewSection crew={film.keyCrew} />
+              </div>
+            ) : null}
             <div className="mt-10">
               <Suspense fallback={null}>
                 <FilmDetailSampleScenesSection

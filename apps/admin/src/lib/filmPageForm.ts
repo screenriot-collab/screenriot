@@ -8,6 +8,7 @@ import type {
   FilmPageFormState,
   FilmPageUpdate,
   MainCharacterForm,
+  KeyCrewMemberForm,
   CastingVoteForm,
   CastingVoteOptionForm,
   ProductionForm,
@@ -131,6 +132,39 @@ function mainCharactersFromDetail(
   });
 }
 
+type Step3CrewRow = {
+  name?: string;
+  position?: string;
+  email?: string;
+};
+
+function keyCrewFromDetail(
+  pcKeyCrew: KeyCrewMemberForm[] | undefined,
+  step3Crew: Step3CrewRow[],
+): KeyCrewMemberForm[] {
+  if (pcKeyCrew && pcKeyCrew.length > 0) {
+    return pcKeyCrew.map((c) => ({
+      id: c.id ?? `crew-${Math.random().toString(36).slice(2, 9)}`,
+      name: c.name ?? '',
+      role: c.role ?? 'Other',
+      description: c.description ?? '',
+      email: c.email ?? undefined,
+      imageUrl: c.imageUrl ?? null,
+      tmdbBio: c.tmdbBio,
+      tmdbBirthday: c.tmdbBirthday,
+      tmdbPlaceOfBirth: c.tmdbPlaceOfBirth,
+    }));
+  }
+  return step3Crew.map((row, i) => ({
+    id: `crew-${i}`,
+    name: (row.name ?? '').trim() || '—',
+    role: (row.position ?? '').trim() || 'Other',
+    description: '',
+    email: (row.email ?? '').trim() || undefined,
+    imageUrl: null,
+  }));
+}
+
 export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
   const f = res.film;
   const pc = (f.pageContent as Record<string, unknown> | null) ?? {};
@@ -159,6 +193,13 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
       (row.character ?? row.role ?? '').trim(),
   );
   const mainCharacters = mainCharactersFromDetail(pcMain, step3Cast);
+
+  const pcKeyCrew = (pc.keyCrew as KeyCrewMemberForm[] | undefined) ?? [];
+  const step3Crew = (f.step3?.crew ?? []).filter(
+    (row: Step3CrewRow) => (row.name ?? '').trim() || (row.position ?? '').trim() || (row.email ?? '').trim(),
+  );
+  const keyCrew = keyCrewFromDetail(pcKeyCrew, step3Crew);
+  const keyCrewVisible = (pc.keyCrewVisible as boolean | undefined) ?? false;
 
   const existingCasting = tabSection?.castingVote as CastingVoteForm | undefined;
   const castingFromWishList = parseWishListCastToOptions(f.step3?.wishListCast);
@@ -290,6 +331,7 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
         roi: s.roi ?? '',
         rating: s.rating ?? '',
         matchPercent: typeof s.matchPercent === 'number' ? s.matchPercent : 0,
+        posterUrl: s.posterUrl,
       }))
     : [];
 
@@ -360,6 +402,8 @@ export function buildFormFromDetail(res: AdminFilmDetail): FilmPageFormState {
     whyMatters: (tabSynopsis.whyMatters as string) ?? '',
     tags: tagsArr.length ? tagsArr.join(', ') : '',
     mainCharacters,
+    keyCrew,
+    keyCrewVisible,
     castingVote,
     productionTitle,
     productionStages,
@@ -493,6 +537,8 @@ export function buildFilmPageUpdatePayload(
         }
       : (pledgeVotingExisting ?? defaultPledge),
     mainCharacters: form.mainCharacters ?? [],
+    keyCrew: form.keyCrew ?? (existing.keyCrew as KeyCrewMemberForm[]) ?? [],
+    keyCrewVisible: form.keyCrewVisible ?? (existing.keyCrewVisible as boolean) ?? false,
   };
 
   return {

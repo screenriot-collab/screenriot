@@ -16,6 +16,7 @@ import type {
   CastingSuggestionFilmSummary,
   UpdateCastingSuggestionPayload,
 } from '@/types/casting-suggestions';
+import type { TmdbActorResult, TmdbPersonDetails, TmdbMovieResult, TmdbMovieDetails } from '@/types/tmdb';
 
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
 
@@ -181,6 +182,22 @@ export async function updateFilmPage(id: string, body: FilmPageUpdate) {
     method: 'PATCH',
     body: JSON.stringify(body),
   });
+}
+
+export async function searchTmdbActor(query: string): Promise<{ results: TmdbActorResult[] }> {
+  return api<{ results: TmdbActorResult[] }>(`/admin/tmdb/search-actor?query=${encodeURIComponent(query)}`);
+}
+
+export async function getTmdbPersonDetails(tmdbId: number): Promise<TmdbPersonDetails> {
+  return api<TmdbPersonDetails>(`/admin/tmdb/person/${tmdbId}`);
+}
+
+export async function searchTmdbMovie(query: string): Promise<{ results: TmdbMovieResult[] }> {
+  return api<{ results: TmdbMovieResult[] }>(`/admin/tmdb/search-movie?query=${encodeURIComponent(query)}`);
+}
+
+export async function getTmdbMovieDetails(tmdbId: number): Promise<TmdbMovieDetails> {
+  return api<TmdbMovieDetails>(`/admin/tmdb/movie/${tmdbId}`);
 }
 
 /** Upload poster or teaser for film page. Same storage path as application; overwrites. */

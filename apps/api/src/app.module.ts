@@ -8,6 +8,7 @@ import { FilmsModule } from './films/films.module';
 import { DonationsModule } from './donations/donations.module';
 import { AdminModule } from './admin/admin.module';
 import { S3Module } from './s3/s3.module';
+import { TmdbModule } from './tmdb/tmdb.module';
 import { UploadModule } from './upload/upload.module';
 import { HealthModule } from './health/health.module';
 import { VerificationModule } from './verification/verification.module';
@@ -18,6 +19,7 @@ import { ContributionsModule } from './contributions/contributions.module';
     PrismaModule,
     MailModule,
     S3Module,
+    TmdbModule,
     HealthModule,
     AuthModule,
     UsersModule,

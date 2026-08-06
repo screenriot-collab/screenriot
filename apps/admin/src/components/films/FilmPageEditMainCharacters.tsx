@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   CLASS_INPUT_SM,
   CLASS_SECTION,
@@ -9,6 +10,7 @@ import {
 } from '@/constants/styles';
 import { CAST_TIER_OPTIONS } from '@/constants/films';
 import { roleLine } from '@/lib/filmPageForm';
+import { TmdbPersonSearchModal } from './TmdbPersonSearchModal';
 import type { FilmPageFormState, MainCharacterForm } from '@/types/films';
 
 const DEFAULT_TIER = CAST_TIER_OPTIONS[0].value;
@@ -27,6 +29,16 @@ type Props = {
 };
 
 export function FilmPageEditMainCharacters({ form, setForm }: Props) {
+  const [tmdbSearchId, setTmdbSearchId] = useState<string | null>(null);
+  const tmdbSearchChar = (form.mainCharacters ?? []).find((c) => c.id === tmdbSearchId) ?? null;
+
+  function patchCharacter(id: string, patch: Partial<MainCharacterForm>) {
+    setForm((p) => ({
+      ...p,
+      mainCharacters: (p.mainCharacters ?? []).map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  }
+
   return (
     <section
       className={CLASS_SECTION}
@@ -44,7 +56,14 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
         {(form.mainCharacters ?? []).map((char) => (
           <li key={char.id} className={CLASS_CARD}>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-gray-400">
+              <span className="flex items-center gap-2 text-xs font-medium text-gray-400">
+                {char.imageUrl ? (
+                  <img src={char.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[11px] text-gray-500">
+                    {(char.name || '?').trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
                 Character
               </span>
               <button
@@ -80,6 +99,13 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
                   className={CLASS_INPUT_SM}
                   placeholder="e.g. Dr. Elena Voss"
                 />
+                <button
+                  type="button"
+                  onClick={() => setTmdbSearchId(char.id)}
+                  className="mt-1.5 rounded bg-admin-accent/15 px-2.5 py-1 text-xs font-medium text-admin-accent transition-colors hover:bg-admin-accent/25"
+                >
+                  Search TMDB
+                </button>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-400">Verification Email</label>
@@ -189,6 +215,15 @@ export function FilmPageEditMainCharacters({ form, setForm }: Props) {
       >
         + Add character
       </button>
+
+      <TmdbPersonSearchModal
+        open={tmdbSearchId !== null}
+        query={tmdbSearchChar?.name ?? ''}
+        onClose={() => setTmdbSearchId(null)}
+        onApply={(patch) => {
+          if (tmdbSearchId) patchCharacter(tmdbSearchId, patch);
+        }}
+      />
     </section>
   );
 }
