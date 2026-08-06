@@ -16,16 +16,37 @@ function initials(name: string): string {
 }
 
 export function FilmDetailKeyCrewSection({ crew }: FilmDetailKeyCrewSectionProps) {
+  const [expanded, setExpanded] = useState(true);
   const [expandedDesc, setExpandedDesc] = useState<Record<string, boolean>>({});
 
   return (
     <section className="rounded-xl border border-white/10 bg-screenriot-bg-card" aria-labelledby="key-crew-heading">
-      <div className="border-b border-white/10 px-6 py-4">
+      <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
         <h2 id="key-crew-heading" className="text-lg font-semibold text-white">
           Key Crew
         </h2>
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="rounded p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
+          aria-expanded={expanded}
+          aria-controls="key-crew-content"
+          aria-label={expanded ? 'Collapse Key Crew' : 'Expand Key Crew'}
+        >
+          <svg
+            className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
       </div>
-      <div className="px-6 py-4">
+      {expanded && (
+      <div id="key-crew-content" className="px-6 py-4">
         <div className="flex flex-wrap gap-4">
           {crew.map((member) => {
             const desc = member.description?.trim() ?? '';
@@ -71,6 +92,7 @@ export function FilmDetailKeyCrewSection({ crew }: FilmDetailKeyCrewSectionProps
           })}
         </div>
       </div>
+      )}
     </section>
   );
 }

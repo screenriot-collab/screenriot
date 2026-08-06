@@ -86,7 +86,7 @@ export function buildAiAnalysisPrompt(film: AdminFilm): string {
     "- Every number or claim must be traceable to either (a) a real comparable film you looked up or know, or (b) explicit reasoning from the budget/genre/team data above. Do not fabricate precise-looking statistics you can't justify.",
     '- Where you are estimating rather than citing a known fact, use a qualitative label or range ("Medium", "18-24%") instead of false precision ("87.3%").',
     '- "similarFilms" must be real, actually released films (include release year in the title), comparable in genre, tone, or budget, with their real box office figures, and "rating" as a critic-score percentage (e.g. "92% Critical"), not a /10 score.',
-    '- Include a one-sentence "methodologyNote" stating whether you used web search, and which comparable films most informed the analysis.',
+    '- Include a "methodologyNote" stating whether you used web search and which comparable films most informed the analysis. Keep it short, but if it covers more than one point, separate them with a blank line (\\n\\n) so it reads as paragraphs, not a wall of text.',
     '- 3-5 items per metrics array unless there is not enough basis for that many.',
     '- Respond with ONLY a JSON object matching this exact shape - no markdown code fences, no commentary before or after:',
     RESPONSE_SHAPE_EXAMPLE,

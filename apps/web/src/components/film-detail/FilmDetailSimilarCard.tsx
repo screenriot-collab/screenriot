@@ -4,6 +4,13 @@ interface FilmDetailSimilarCardProps {
   film: SimilarFilm;
 }
 
+/** Below 40% reads as a weak match, 40-70% moderate, above 70% strong. */
+function matchBadgeClass(matchPercent: number): string {
+  if (matchPercent < 40) return 'bg-red-500/80';
+  if (matchPercent < 70) return 'bg-amber-500/80';
+  return 'bg-green-600/80';
+}
+
 export function FilmDetailSimilarCard({ film }: FilmDetailSimilarCardProps) {
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-screenriot-bg-card/40 backdrop-blur-sm">
@@ -24,7 +31,9 @@ export function FilmDetailSimilarCard({ film }: FilmDetailSimilarCardProps) {
             ROI: {film.roi || '—'} · Rating: {film.rating || '—'}
           </p>
         </div>
-        <span className="mt-3 inline-flex w-fit rounded-lg bg-gradient-to-r from-screenriot-accent-blue to-blue-600 px-2.5 py-1 text-xs font-medium text-white">
+        <span
+          className={`mt-3 inline-flex w-fit rounded-lg px-2.5 py-1 text-xs font-medium text-white ${matchBadgeClass(film.matchPercent)}`}
+        >
           Match: {film.matchPercent}%
         </span>
       </div>

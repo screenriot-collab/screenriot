@@ -145,12 +145,16 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
           the fields below. Nothing is sent from this app - review and edit before saving.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" onClick={handleCopyPrompt} className={CLASS_ADD_LINK}>
+          <button
+            type="button"
+            onClick={handleCopyPrompt}
+            className="rounded bg-admin-accent/15 px-3 py-1.5 text-xs font-medium text-admin-accent transition-colors hover:bg-admin-accent/25"
+          >
             Copy prompt
           </button>
-          {copyStatus === 'copied' && <span className="text-xs text-green-400">Copied to clipboard.</span>}
+          {copyStatus === 'copied' && <span className="text-xs leading-none text-green-400">Copied to clipboard.</span>}
           {copyStatus === 'error' && (
-            <span className="text-xs text-red-400">Could not copy - copy it manually from the console.</span>
+            <span className="text-xs leading-none text-red-400">Could not copy - copy it manually from the console.</span>
           )}
         </div>
         <div className="mt-4">
@@ -175,10 +179,10 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
             Apply to fields below
           </button>
           {methodologyNote && (
-            <p className="mt-2 rounded-md border border-admin-accent/20 bg-admin-accent/10 px-3 py-2 text-xs text-gray-300">
-              <span className="font-medium text-admin-accent">Methodology (not saved): </span>
-              {methodologyNote}
-            </p>
+            <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-gray-200">
+              <p className="font-medium text-amber-400">Methodology (not saved, verify before trusting)</p>
+              <p className="mt-1 whitespace-pre-wrap">{methodologyNote}</p>
+            </div>
           )}
         </div>
       </section>
