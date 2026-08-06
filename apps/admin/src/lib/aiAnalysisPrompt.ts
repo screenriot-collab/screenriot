@@ -11,9 +11,12 @@ import type { AdminFilm, AiAnalysisForm, MetricForm, SimilarFilmForm } from '@/t
 export type AiAnalysisDraft = {
   aiAnalysis: AiAnalysisForm;
   similarFilms: SimilarFilmForm[];
+  /** The model's own note on how it arrived at the numbers (web search vs training knowledge, which comparables it used). Shown as a hint in admin only - not saved to pageContent. */
+  methodologyNote: string;
 };
 
 const RESPONSE_SHAPE_EXAMPLE = `{
+  "methodologyNote": "Used web search to confirm 2023-2024 box office for 3 sci-fi thriller comparables.",
   "overallScore": 88,
   "marketInsights": [
     { "label": "Popularity & Trend", "value": "87", "description": "Based on similar films' performance" },
@@ -47,8 +50,14 @@ export function buildAiAnalysisPrompt(film: AdminFilm): string {
   const breakdown = film.step4?.breakdown ?? [];
 
   const lines: string[] = [
-    'You are a film market analyst. Analyze the following independent film project and produce a structured investment analysis for potential crowd-investors.',
+    'You are a film market analyst. Your task is to produce a grounded, evidence-based investment analysis for the independent film project below - not a generic guess.',
     '',
+    'METHODOLOGY (do this before writing the JSON):',
+    '1. If you have live web search or browsing available, use it now to look up real, recently released films comparable in genre, tone, and budget to this project, and check their actual box office, ROI, and critical reception.',
+    "2. If you do NOT have web access, rely only on your training knowledge of real released films - do not invent titles, numbers, or statistics that don't correspond to real films you actually know.",
+    "3. Use those comparables to reason about this project's market position, team/talent strength, and investment risk. Only after this reasoning, produce the JSON output.",
+    '',
+    'FILM DATA:',
     `Title: ${film.title}`,
     `Genre: ${film.genre ?? '-'}`,
     `Logline: ${film.logline ?? '-'}`,
@@ -74,10 +83,11 @@ export function buildAiAnalysisPrompt(film: AdminFilm): string {
   lines.push(
     '',
     'Rules:',
-    '- Give reasonable analyst estimates, not fabricated precision - it is fine to reason from genre/budget comparables.',
-    '- Each metric\'s "value" can be a 0-100 score (as a string) or a short qualitative label (e.g. "High", "Medium", "18-24%") - whichever fits that metric better.',
-    '- "similarFilms" must be real, actually released films comparable in genre, tone, or budget, with their real box office, and "rating" as a critic-score percentage (e.g. "92% Critical"), not a /10 score.',
-    '- 3-5 items per array unless there is not enough basis for that many.',
+    "- Every number or claim must be traceable to either (a) a real comparable film you looked up or know, or (b) explicit reasoning from the budget/genre/team data above. Do not fabricate precise-looking statistics you can't justify.",
+    '- Where you are estimating rather than citing a known fact, use a qualitative label or range ("Medium", "18-24%") instead of false precision ("87.3%").',
+    '- "similarFilms" must be real, actually released films (include release year in the title), comparable in genre, tone, or budget, with their real box office figures, and "rating" as a critic-score percentage (e.g. "92% Critical"), not a /10 score.',
+    '- Include a one-sentence "methodologyNote" stating whether you used web search, and which comparable films most informed the analysis.',
+    '- 3-5 items per metrics array unless there is not enough basis for that many.',
     '- Respond with ONLY a JSON object matching this exact shape - no markdown code fences, no commentary before or after:',
     RESPONSE_SHAPE_EXAMPLE,
   );
@@ -148,5 +158,6 @@ export function parseAiAnalysisResponse(raw: string): AiAnalysisDraft {
       investmentMetrics: toMetrics(obj.investmentMetrics, 'investmentMetrics'),
     },
     similarFilms: toSimilarFilms(obj.similarFilms),
+    methodologyNote: typeof obj.methodologyNote === 'string' ? obj.methodologyNote : '',
   };
 }

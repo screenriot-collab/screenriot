@@ -104,6 +104,7 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const [pastedResponse, setPastedResponse] = useState('');
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [methodologyNote, setMethodologyNote] = useState<string | null>(null);
 
   async function handleCopyPrompt() {
     try {
@@ -125,8 +126,10 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
         similarFilms: [...(p.similarFilms ?? []), ...draft.similarFilms],
       }));
       setPastedResponse('');
+      setMethodologyNote(draft.methodologyNote || null);
     } catch (err) {
       setApplyError(err instanceof Error ? err.message : 'Could not read that response.');
+      setMethodologyNote(null);
     }
   }
 
@@ -171,6 +174,12 @@ export function FilmPageEditAiAnalysis({ film, form, setForm }: Props) {
           >
             Apply to fields below
           </button>
+          {methodologyNote && (
+            <p className="mt-2 rounded-md border border-admin-accent/20 bg-admin-accent/10 px-3 py-2 text-xs text-gray-300">
+              <span className="font-medium text-admin-accent">Methodology (not saved): </span>
+              {methodologyNote}
+            </p>
+          )}
         </div>
       </section>
 
