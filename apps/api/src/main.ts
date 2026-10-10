@@ -21,7 +21,7 @@ async function bootstrap() {
     bodyParser.json()(req, res, next);
   });
   const allowedOrigins = [
-    'https://screenriot-web.vercel.app',
+    'https://screenriot-films.vercel.app',
     'https://screenriot-admin.vercel.app',
     'http://localhost:3000',
     'http://localhost:3002',
